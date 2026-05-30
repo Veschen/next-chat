@@ -66,7 +66,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <TooltipProvider>
                             <Tooltip>
-                                <TooltipTrigger>
+                                <TooltipTrigger asChild>
                                     <Button
                                         onClick={handleCopy}
                                         variant="ghost"

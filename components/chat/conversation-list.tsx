@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { Plus, Trash2, MessagesSquare } from 'lucide-react'
+import { Plus, Trash2, MessageSquare } from 'lucide-react'
 import { Button } from '../ui/button'
 import { ScrollArea } from '../ui/scroll-area'
 import type { Conversation } from '@/lib/use-chat'
@@ -40,7 +40,7 @@ export function ConversationList({ conversations, activeId, onSelect, onCreate, 
                                         className={cn('flex group items-center gap-2 rounded-lg px-3 py-2.5 text-sm cursor-pointer transition-colors',
                                             activeId === conversation.id ? 'bg-background shadow-sm' : 'hover:bg-background/60'
                                         )}>
-                                        <MessagesSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
+                                        <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
                                         <span className="flex-1 truncate">{conversation.title}</span>
                                         <Button
                                             variant="ghost"
