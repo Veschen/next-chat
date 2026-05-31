@@ -67,16 +67,18 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={handleCopy}
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                    >
-                                        {copied
-                                            ? <Check className="h-3.5 w-3.5 text-emerald-500" />
-                                            : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-                                    </Button>
+                                    <span className="inline-flex">
+                                        <Button
+                                            onClick={handleCopy}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                        >
+                                            {copied
+                                                ? <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                                : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                                        </Button>
+                                    </span>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     {copied ? '已复制' : '复制'}

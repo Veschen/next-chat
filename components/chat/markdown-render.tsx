@@ -12,6 +12,25 @@ interface MarkdownRenderProps {
     className?: string
 }
 
+function extractText(node: React.ReactNode): string {
+    if (!node) {
+        return ''
+    }
+    if (typeof node === 'string') {
+        return node
+    }
+    if (typeof node === 'number') {
+        return String(node)
+    }
+    if (Array.isArray(node)) {
+        return node.map(extractText).join('')
+    }
+    if (typeof node === 'object' && 'props' in node) {
+        return extractText(node.props.children)
+    }
+    return ''
+}
+
 function CodeBlock({
     className,
     children,
@@ -20,7 +39,7 @@ function CodeBlock({
     const [copied, setCopied] = useState(false)
     const match = /language-(\w+)/.exec(className || '')
     const language = match?.[1] || 'plaintext'
-    const codeText = String(children).replace(/\n$/, '')
+    const codeText = extractText(children).replace(/\n$/, '')
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(codeText)
