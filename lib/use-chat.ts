@@ -14,6 +14,7 @@ export interface ChatMessage {
     /** 消息创建时间 */
     timestamp: number
     loading?: boolean
+    feedback?: 'like' | 'dislike' | null
 }
 
 export interface Conversation {
@@ -41,6 +42,10 @@ interface ChatState {
     sendMessage: (content: string, requestOptions: CRequestOptions) => void
     /** 中止当前流式请求 */
     abortStream: () => void
+    /** 设置消息反馈 */
+    setMessageFeedback: (id: string, feedback: 'like' | 'dislike'| null) => void
+    /** 重新生成最后一条回复 */
+    regenerateLastMessage: (requestOptions: CRequestOptions) => void
 }
 
 // 这里使用模块级变量，而不使用store是因为遵循zustand 最佳实践： store放状态，模块变量放副作用引用
@@ -161,15 +166,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 } catch {
                     accumulated += chunk.data
                 }
-                set((state)=> ({
-                    conversations: state.conversations.map((c)=>{
+                set((state) => ({
+                    conversations: state.conversations.map((c) => {
                         if (c.id !== conversationId) return c
                         return {
                             ...c,
-                            messages: c.messages.map((msg)=> (
+                            messages: c.messages.map((msg) => (
                                 msg.id === assistantMessage.id ?
-                                {...msg, content: accumulated}
-                                : msg
+                                    { ...msg, content: accumulated }
+                                    : msg
                             )),
                         }
                     })
@@ -183,10 +188,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                         if (c.id !== conversationId) return c
                         return {
                             ...c,
-                            messages: c.messages.map((msg)=> (
+                            messages: c.messages.map((msg) => (
                                 msg.id === assistantMessage.id ?
-                                {...msg, content: accumulated}
-                                : msg
+                                    { ...msg, content: accumulated }
+                                    : msg
                             )),
                         }
                     }),
@@ -194,11 +199,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 currentRequest = null
             },
 
-            onError:(error: Error) => {
+            onError: (error: Error) => {
                 const errorContent =
-                error.name === 'AbortError' 
-                ? accumulated || '已取消' 
-                : `请求失败：${error.message}`
+                    error.name === 'AbortError'
+                        ? accumulated || '已取消'
+                        : `请求失败：${error.message}`
 
                 set((state) => ({
                     isStreaming: false,
@@ -206,10 +211,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                         if (c.id !== conversationId) return c
                         return {
                             ...c,
-                            messages: c.messages.map((msg)=> (
+                            messages: c.messages.map((msg) => (
                                 msg.id === assistantMessage.id ?
-                                {...msg, content: errorContent}
-                                : msg
+                                    { ...msg, content: errorContent }
+                                    : msg
                             )),
                         }
                     }),
@@ -222,5 +227,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     abortStream: () => {
         currentRequest?.abort()
         currentRequest = null
+    },
+
+    setMessageFeedback: (id: string, feedback: 'like' | 'dislike'| null) => {
+        set((state) => ({
+            conversations: state.conversations.map((c) => ({
+                ...c,
+                messages: c.messages.map((msg) => (
+                    msg.id === id ?
+                        { ...msg, feedback: msg.feedback === feedback ? null : feedback }
+                        : msg
+                )),
+            }))
+        }))
+    },
+
+    regenerateLastMessage: (requestOptions: CRequestOptions) => {
+        const state = get()
+        const conversation = state.getActiveConversation()
+        if (!conversation || state.isStreaming) return
+
+        const lastAssistantIndex = [...conversation.messages].reverse().findIndex(msg => msg.role === 'assistant')
+        if (lastAssistantIndex === -1) return
+
+        const actualIndex = conversation.messages.length - 1 - lastAssistantIndex
+        const userMessage = conversation.messages.slice(0, actualIndex).reverse().find(msg => msg.role === 'user')
+        if (!userMessage) return
+
+        // 删除最后一条assistant消息
+        set((preState) => ({
+            conversations: preState.conversations.map((c) => {
+                if (c.id !== conversation.id) return c
+                return {
+                    ...c,
+                    messages: c.messages.filter((_, index) => index !== actualIndex),
+                }
+            })
+        }))
+
+        // 用原 user 消息重新发送请求
+        get().sendMessage(userMessage.content, requestOptions)
     }
 }))

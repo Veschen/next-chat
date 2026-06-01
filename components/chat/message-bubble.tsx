@@ -1,29 +1,22 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
-import { Copy, Check, User, Bot, Loader2 } from 'lucide-react'
+import React from 'react'
+import { User, Bot, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { MarkdownRender } from './markdown-render'
 import type { ChatMessage } from '@/lib/use-chat'
+import { MessageActions } from './message-actions'
 
 interface MessageBubbleProps {
     message: ChatMessage
+    isLastAssistant: boolean
+    onGenerate: () => void
+    onFeedback: (id: string, feedback: 'like' | 'dislike'| null) => void
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, isLastAssistant = false, onGenerate, onFeedback }: MessageBubbleProps) {
     const isUser = message.role === 'user'
-    const [copied, setCopied] = useState(false)
-
-    const handleCopy = useCallback(() => {
-        navigator.clipboard.writeText(message.content)
-        setCopied(true)
-        setTimeout(() => {
-            setCopied(false)
-        }, 2000)
-    }, [message.content])
 
     return (
         <div
@@ -62,30 +55,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             </div>
             {/* 操作按钮 */}
             {
-                isUser && message.content && (
-                    <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span className="inline-flex">
-                                        <Button
-                                            onClick={handleCopy}
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                        >
-                                            {copied
-                                                ? <Check className="h-3.5 w-3.5 text-emerald-500" />
-                                                : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-                                        </Button>
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {copied ? '已复制' : '复制'}
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
+                !isUser && message.content && (
+                    <MessageActions
+                        message={message}
+                        isLastAssistant={isLastAssistant}
+                        onGenerate={onGenerate}
+                        onFeedback={onFeedback}
+                    />
                 )
             }
         </div>

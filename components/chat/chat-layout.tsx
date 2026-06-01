@@ -28,6 +28,8 @@ export function ChatLayout() {
     const deleteConversation = useChatStore((state) => state.deleteConversation)
     const sendMessage = useChatStore((state) => state.sendMessage)
     const abortStream = useChatStore((state) => state.abortStream)
+    const setMessageFeedback = useChatStore((state) => state.setMessageFeedback)
+    const regenerateLastMessage = useChatStore((state) => state.regenerateLastMessage)
 
     const currentConversation = activeConversation()
     const messages = currentConversation?.messages ?? []
@@ -35,6 +37,10 @@ export function ChatLayout() {
     const handleSend = useCallback((content: string) => {
         sendMessage(content, REQUEST_OPTIONS)
     }, [sendMessage])
+
+    const handleGenerate = useCallback(() => {
+        regenerateLastMessage(REQUEST_OPTIONS)
+    }, [regenerateLastMessage])
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -65,7 +71,12 @@ export function ChatLayout() {
                     }
                 </div>
                 {/* 消息列表 */}
-                <MessageList messages={messages} isStreaming={isStreaming} />
+                <MessageList 
+                messages={messages} 
+                isStreaming={isStreaming}
+                onGenerate={handleGenerate}
+                onFeedback={setMessageFeedback}
+                />
                 {/* 输入框 */}
                 <ChatInput onSend={handleSend} onAbort={abortStream} isStreaming={isStreaming} />
             </div>

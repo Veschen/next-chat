@@ -9,15 +9,18 @@ import type { ChatMessage } from '../../lib/use-chat'
 interface MessageListProps {
     messages: ChatMessage[]
     isStreaming: boolean
+    onGenerate: () => void
+    onFeedback: (id: string, feedback: 'like' | 'dislike'| null) => void
 }
 
-export function MessageList({ messages, isStreaming }: MessageListProps) {
+export function MessageList({ messages, isStreaming, onGenerate, onFeedback }: MessageListProps) {
     // 让滚动条自然滚动到最底部
     const bottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, isStreaming])
+    console.log('%c [ messages ]-23', 'font-size:13px; background:pink; color:#bf2c9f;', messages)
 
     if (messages.length === 0) {
         return (
@@ -33,11 +36,20 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
         )
     }
 
+    // 找到最后一条消息的id
+    const lastAssistantId = [...messages].reverse().find((msg) => msg.role === 'assistant')?.id
+
     return (
         <ScrollArea className="flex-1 min-h-0 overflow-hidden">
             <div className="max-w-3xl mx-auto py-4">
                 {messages.map((message) => (
-                    <MessageBubble key={message.id} message={message} />
+                    <MessageBubble 
+                    key={message.id} 
+                    message={message}
+                    isLastAssistant={message.id === lastAssistantId}
+                    onGenerate={onGenerate}
+                    onFeedback={onFeedback}
+                    />
                 ))}
                 <div ref={bottomRef} />
             </div>
