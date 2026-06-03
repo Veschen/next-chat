@@ -5,13 +5,11 @@
  * - mock （默认）
  * - openai openai 兼容格式
  * - ollama ollama 协议 NDJSON 格式
- * 
- *  切换方式：修改 ACTIVE_PROVIDER 环境变量
  */
 
 type ProviderType = 'mock' | 'openai' | 'ollama'
 
-const DEFAULT_PROVIDER: ProviderType = (process.env.ACTIVE_PROVIDER as ProviderType) || 'mock'
+const DEFAULT_PROVIDER: ProviderType = 'mock'
 
 const PROVIDER_CONFIG = {
     mock: {},
