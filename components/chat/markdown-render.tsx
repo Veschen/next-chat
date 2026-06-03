@@ -25,8 +25,9 @@ function extractText(node: React.ReactNode): string {
     if (Array.isArray(node)) {
         return node.map(extractText).join('')
     }
-    if (typeof node === 'object' && 'props' in node) {
-        return extractText(node.props.children)
+    if (typeof node === 'object' && node !== null &&  'props' in node) {
+        const props = (node as unknown as Record<string, Record<string, unknown>>).props
+        return extractText(props.children as React.ReactNode)
     }
     return ''
 }
