@@ -41,7 +41,7 @@ export function ConversationList({ conversations, activeId, onSelect, onCreate, 
                                             activeId === conversation.id ? 'bg-background shadow-sm' : 'hover:bg-background/60'
                                         )}>
                                         <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
-                                        <span className="flex-1 truncate">{conversation.title}</span>
+                                        <span className="flex-1 w-24 truncate">{conversation.title}</span>
                                         <Button
                                             variant="ghost"
                                             size="icon"

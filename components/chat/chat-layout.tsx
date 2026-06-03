@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '../ui/button'
+import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from '../ui/select'
 import { useChatStore } from '@/lib/use-chat'
 import { ConversationList } from './conversation-list'
 import { ChatInput } from './chat-input'
@@ -16,8 +17,25 @@ const REQUEST_OPTIONS: CRequestOptions = {
     streamTimeout: 15_000,
 }
 
+const PROVIDER_OPTIONS = [
+    {
+        value: 'mock',
+        label: 'Mock',
+    },
+    {
+        value: 'openai',
+        label: '通义千问',
+    },
+] as const
+
 export function ChatLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [provider, setProvider] = useState('mock')
+
+    const requestOptions: CRequestOptions = useMemo(() => ({
+        ...REQUEST_OPTIONS,
+        baseURL: `/api/chat?provider=${provider}`,
+    }), [provider])
 
     const conversations = useChatStore((state) => state.conversations)
     const activeConversationId = useChatStore((state) => state.activeConversationId)
@@ -35,12 +53,12 @@ export function ChatLayout() {
     const messages = currentConversation?.messages ?? []
 
     const handleSend = useCallback((content: string) => {
-        sendMessage(content, REQUEST_OPTIONS)
-    }, [sendMessage])
+        sendMessage(content, requestOptions)
+    }, [sendMessage, requestOptions])
 
     const handleGenerate = useCallback(() => {
-        regenerateLastMessage(REQUEST_OPTIONS)
-    }, [regenerateLastMessage])
+        regenerateLastMessage(requestOptions)
+    }, [regenerateLastMessage, requestOptions])
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -66,16 +84,34 @@ export function ChatLayout() {
                     <h1 className="text-sm font-medium truncate">
                         {currentConversation?.title ?? '新对话'}
                     </h1>
-                    {
-                        isStreaming && <span className="ml-auto text-xs text-muted-foreground animate-pulse">生成中...</span>
-                    }
+                    <div className="flex items-center gap-3">
+                        {
+                            isStreaming && <span className="text-xs text-muted-foreground animate-pulse">生成中...</span>
+                        }
+                    </div>
+
+                    <div className="w-32">
+                        <Select value={provider} onValueChange={setProvider}>
+                            <SelectTrigger className="w-full max-w-48">
+                                <SelectValue placeholder="选择模型" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background">
+                                <SelectGroup>
+                                    <SelectLabel>请选择模型</SelectLabel>
+                                    {PROVIDER_OPTIONS.map((item) => (
+                                        <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                    </Select>
+                    </div>
                 </div>
                 {/* 消息列表 */}
-                <MessageList 
-                messages={messages} 
-                isStreaming={isStreaming}
-                onGenerate={handleGenerate}
-                onFeedback={setMessageFeedback}
+                <MessageList
+                    messages={messages}
+                    isStreaming={isStreaming}
+                    onGenerate={handleGenerate}
+                    onFeedback={setMessageFeedback}
                 />
                 {/* 输入框 */}
                 <ChatInput onSend={handleSend} onAbort={abortStream} isStreaming={isStreaming} />

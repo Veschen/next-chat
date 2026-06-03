@@ -1,6 +1,7 @@
 # Next Chat 💬
 
 一个基于 Next.js 14 的 AI 智能聊天应用，支持 Markdown 渲染、代码高亮和流式响应。
+预览地址：[https://next-chat.vercel.app](https://next-chat.vercel.app)  （⚠️请使用代理访问）
 
 ## 功能特性
 

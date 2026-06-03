@@ -15,11 +15,13 @@ interface ChatInputProps {
 export function ChatInput({ onSend, onAbort, isStreaming, disabled }: ChatInputProps) {
     const [value, setValue] = useState('')
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const isComposingRef = useRef(false)
 
     const handleSend = useCallback(() => {
         const trimmedValue = value.trim()
         if (!trimmedValue || isStreaming || disabled) return
         onSend(trimmedValue)
+        // 输入法的回车和发送消息的回车会冲突
         setValue('')
 
         // 重置高度
@@ -29,7 +31,7 @@ export function ChatInput({ onSend, onAbort, isStreaming, disabled }: ChatInputP
     }, [isStreaming, onSend, value, disabled])
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && !isComposingRef.current) {
             e.preventDefault()
             handleSend()
         }
@@ -56,6 +58,8 @@ export function ChatInput({ onSend, onAbort, isStreaming, disabled }: ChatInputP
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
                         onKeyDown={handleKeyDown}
+                        onCompositionStart={() => isComposingRef.current = true}
+                        onCompositionEnd={() => isComposingRef.current = false}
                         placeholder="请输入,按Enter发送,按Shift+Enter换行"
                         disabled={disabled}
                         rows={1}

@@ -20,7 +20,6 @@ export function MessageList({ messages, isStreaming, onGenerate, onFeedback }: M
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, isStreaming])
-    console.log('%c [ messages ]-23', 'font-size:13px; background:pink; color:#bf2c9f;', messages)
 
     if (messages.length === 0) {
         return (

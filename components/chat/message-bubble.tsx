@@ -52,8 +52,7 @@ export function MessageBubble({ message, isLastAssistant = false, onGenerate, on
                         )
                     }
                 </div>
-            </div>
-            {/* 操作按钮 */}
+                {/* 操作按钮 */}
             {
                 !isUser && message.content && (
                     <MessageActions
@@ -64,6 +63,7 @@ export function MessageBubble({ message, isLastAssistant = false, onGenerate, on
                     />
                 )
             }
+            </div>
         </div>
     )
 }
