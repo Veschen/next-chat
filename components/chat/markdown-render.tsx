@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useState, useMemo } from "react"
+import React, { useCallback, useState, useMemo, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
@@ -18,6 +18,7 @@ import {
 } from "./markdown-extensions"
 import { useStreamContent } from "@/lib/hooks/use-stream-content"
 import 'katex/dist/katex.min.css'
+import 'highlight.js/styles/github-dark.min.css'
 
 interface MarkdownRenderProps {
     content: string
@@ -37,6 +38,8 @@ interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
     enableMermaid: boolean
     customRenderers: CustomCodeBlockRenderer[]
 }
+
+const RAW_TEXT_LANGUAGE = new Set(['mermaid', 'card'])
 
 function extractText(node: React.ReactNode): string {
     if (!node) return ''
@@ -62,9 +65,25 @@ function CodeBlock({
     ...props
 }: CodeBlockProps) {
     const [copied, setCopied] = useState(false)
+    const codeRef = useRef<HTMLElement>(null)
     const match = /language-(\w+)/.exec(className || '')
     const language = match?.[1] || 'plaintext'
-    const codeText = extractText(children).replace(/\n$/, '')
+
+    const reactText = useMemo(() => extractText(children).replace(/\n$/, ''), [children])
+
+    // 对于 mermaid 图表和 card 块，直接复制文本
+    const [domText, setDomText] = useState('')
+    const needsDomText = RAW_TEXT_LANGUAGE.has(language)
+
+    useEffect(() => {
+        if (needsDomText && codeRef.current) {
+            const text = (codeRef.current.textContent || '').replace(/\n$/, '')
+            setDomText(text)
+        }
+
+    }, [needsDomText, children])
+
+    const codeText = needsDomText && domText ? domText : reactText
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(codeText)
@@ -86,14 +105,24 @@ function CodeBlock({
     // Mermaid 图表渲染
     if (enableMermaid && language === 'mermaid') {
         return (
-            <MermaidDiagram content={codeText} />
+            <>
+                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                    {children}
+                </code>
+                <MermaidDiagram content={codeText} />
+            </>
         )
     }
 
     // Card 块渲染
     if (language === 'card') {
         return (
-            <CardBlock content={codeText} />
+            <>
+                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                    {children}
+                </code>
+                <CardBlock content={codeText} />
+            </>
         )
     }
 
@@ -116,7 +145,7 @@ function CodeBlock({
                     {copied ? '已复制' : '复制'}
                 </button>
             </div>
-            <pre className="!mt-0 !rounded-t-none">
+            <pre className="!mt-0 !rounded-t-none bg-zinc-800">
                 <code className={className} {...props}>
                     {children}
                 </code>

@@ -133,7 +133,7 @@
 /* markdown code highlighting */
 pre code.hljs {
   padding: 1em;
-  border-radius: 0.5rem;
+  border-radius: 0;
   font-size: 0.875rem;
   line-height: 1.5;
 }

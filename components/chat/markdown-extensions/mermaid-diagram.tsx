@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 
 interface MermaidDiagramProps {
     content: string
 }
+
+const RENDER_DEBOUNCE_MS = 300 // 300ms 延迟渲染
 
 let mermaidInitialized = false
 
@@ -13,27 +15,26 @@ export function MermaidDiagram({ content }: MermaidDiagramProps) {
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
     const renderCounterRef = useRef<number>(0)
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const lastRenderedContentRef = useRef<string>('')
 
-    useEffect(() => {
-        if (!content || !containerRef.current) return
-        let cancelled = false
-        async function renderDiagram() {
-            try {
+    const renderDiagram = useCallback(async(diagramContent: string, cancelled: { current: boolean }) => {
+         try {
                 setLoading(true)
                 setError(null)
                 const mermaid = (await import('mermaid')).default
-                if(!mermaidInitialized){
+                if (!mermaidInitialized) {
                     mermaid.initialize({
-                    startOnLoad: false,
-                    theme: 'default',
-                    securityLevel: 'loose',
-                    fontFamily: 'ui-sans-serif,system-ui, sans-serif',
-                })
-                mermaidInitialized = true
+                        startOnLoad: false,
+                        theme: 'default',
+                        securityLevel: 'loose',
+                        fontFamily: 'ui-sans-serif,system-ui, sans-serif',
+                    })
+                    mermaidInitialized = true
                 }
-                
+
                 // 清除末尾干扰字符,比如反引号、格子等
-                const cleanCode = content.replace(/[`\s]+$/g, '')
+                const cleanCode = diagramContent.replace(/[`\s]+$/g, '')
 
                 // 每次渲染使用唯一的 ID
                 const uniqueId = `mermaid-${Date.now()}-${renderCounterRef.current++}`
@@ -45,23 +46,48 @@ export function MermaidDiagram({ content }: MermaidDiagramProps) {
                 }
 
                 const { svg } = await mermaid.render(uniqueId, cleanCode)
-                if (containerRef.current && !cancelled) {
+                if (containerRef.current && !cancelled.current) {
                     containerRef.current.innerHTML = svg
+                    lastRenderedContentRef.current = diagramContent
                 }
-                if(!cancelled) setLoading(false)
+                if (!cancelled.current) setLoading(false)
             } catch (err) {
-                if(cancelled) return
+                if (cancelled.current) return
                 const errMsg = err instanceof Error ? err.message : '未知错误'
                 console.warn(`渲染 Mermaid 图失败: ${errMsg}`)
                 setError(errMsg)
                 setLoading(false)
             }
-        }
-        renderDiagram()
+    },[])
+
+
+    useEffect(() => {
+        // 内容为空或容器不存在, 不执行渲染
+        if (!content || !containerRef.current) return
+        // 内容未改变, 不执行渲染
+        if (content === lastRenderedContentRef.current) return
+
+        const cancelled = { current: false }
+        
+        // 清除之前的渲染定时器
+        debounceTimerRef.current && clearTimeout(debounceTimerRef.current)
+
+        // 重置错误状态
+        setError(null)
+        setLoading(true)
+
+        debounceTimerRef.current = setTimeout(() => {
+            renderDiagram(content, cancelled)
+        }, RENDER_DEBOUNCE_MS)
+        
         return () => {
-            cancelled = true
+            cancelled.current = true
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current)
+                debounceTimerRef.current = null
+            }
         }
-    }, [content])
+    }, [content, renderDiagram])
 
     if (error) {
         return (
