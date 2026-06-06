@@ -10,23 +10,8 @@ import { ConversationList } from './conversation-list'
 import { ChatInput } from './chat-input'
 import { MessageList } from './message-list'
 import type { CRequestOptions } from '@/lib/request'
+import { REQUEST_OPTIONS, PROVIDER_OPTIONS, MOCK_SHORTCUTS, WELCOME_QUESTIONS, DEFAULT_SUGGESTIONS } from '@/lib/constants'
 
-const REQUEST_OPTIONS: CRequestOptions = {
-    baseURL: '/api/chat',
-    timeout: 30_000,
-    streamTimeout: 15_000,
-}
-
-const PROVIDER_OPTIONS = [
-    {
-        value: 'mock',
-        label: 'Mock',
-    },
-    {
-        value: 'openai',
-        label: '通义千问',
-    },
-] as const
 
 export function ChatLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -104,7 +89,7 @@ export function ChatLayout() {
                                     ))}
                                 </SelectGroup>
                             </SelectContent>
-                    </Select>
+                        </Select>
                     </div>
                 </div>
                 {/* 消息列表 */}
@@ -114,9 +99,18 @@ export function ChatLayout() {
                     onGenerate={handleGenerate}
                     onFeedback={setMessageFeedback}
                     onSwitchVersion={switchMessageVersion}
+                    welcomeQuestions={WELCOME_QUESTIONS}
+                    onQuestionSelect={handleSend}
+                    suggestions={DEFAULT_SUGGESTIONS}
+                    onSuggestionSelect={handleSend}
                 />
                 {/* 输入框 */}
-                <ChatInput onSend={handleSend} onAbort={abortStream} isStreaming={isStreaming} />
+                <ChatInput
+                    onSend={handleSend}
+                    onAbort={abortStream}
+                    isStreaming={isStreaming}
+                    shortcuts={provider === 'mock' ? MOCK_SHORTCUTS : []}
+                />
             </div>
         </div>
     )
