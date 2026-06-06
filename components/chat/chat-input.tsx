@@ -21,6 +21,7 @@ export function ChatInput({ onSend, onAbort, isStreaming, disabled, shortcuts = 
     const [activeIndex, setActiveIndex] = useState(0)
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
     const isComposingRef = useRef(false)
 
     const filteredShortcuts = useMemo(() => {
@@ -114,11 +115,24 @@ export function ChatInput({ onSend, onAbort, isStreaming, disabled, shortcuts = 
         textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
     }, [value])
 
+    // 点击外部区域关闭指令层
+    useEffect(() => {
+        if (!shortcutOpen) return
+
+        const handleClick = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setShortcutOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClick)
+        return () => document.removeEventListener('mousedown', handleClick)
+    }, [])
+
 
     return (
         <div className="border-t bg-background px-4 py-3">
             <div className="max-w-3xl mx-auto">
-                <div className="relative">
+                <div className="relative" ref={containerRef}>
                     <ShortcutList items={filteredShortcuts} visible={shortcutOpen} activeIndex={activeIndex} onSelect={handleShortcutSelect} />
                     <div className="flex items-end gap-2 rounded-2xl border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1">
                         <textarea

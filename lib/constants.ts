@@ -40,7 +40,7 @@ export const MOCK_SHORTCUTS: ShortcutItem[] = [
     {
         label: '代码编写',
         description: '编写或优化代码',
-        prompt: '帮我写一个 TypeScript 函数，实现数组去重功能',
+        prompt: '给我几个经典的函数代码示例',
     },
     {
         label: '数据表格',
@@ -50,7 +50,7 @@ export const MOCK_SHORTCUTS: ShortcutItem[] = [
     {
         label: '图表可视化',
         description: '生成数据可视化图表',
-        prompt: '帮我用 mermaid 语法画一个流程图，展示用户登录流程',
+        prompt: '帮我画一个流程图',
     },
     {
         label: '公式推导',
@@ -71,12 +71,12 @@ export  const  WELCOME_QUESTIONS: QuestionItem[] = [
     {
         label: '帮我写一个编程函数',
         icon: '📝',
-        prompt: '帮我写一个 TypeScript 函数，实现数组去重功能',
+        prompt: '给我几个经典的函数代码示例',
     },
     {
         label: '帮我画一个流程图',
         icon: '📖',
-        prompt: '帮我用 mermaid 语法画一个流程图，展示用户登录流程',
+        prompt: '帮我画个流程图',
     },
     {
         label: '帮我推导一个数学公式',

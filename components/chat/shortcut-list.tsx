@@ -26,16 +26,16 @@ export function ShortcutList({ items, visible, activeIndex, onSelect }: Shortcut
     return (
         <div
             ref={listRef}
-            className={cn("absolute bottom-full left-0 right-0 mb-1 max-h-52 overflow-auto rounded-xl border bg-popover ",
+            className={cn("absolute bottom-full left-0 right-0 mb-1 max-h-52 flex flex-col overflow-auto rounded-xl border bg-popover ",
                 "shadow-lg animate-in fade-in-0 slide-in-from-bottom-2 duration-150")}>
-            <div className="flex items-center gap-2 px-3 py-2 border-b">
+            <div className="flex items-center gap-2 px-3 py-2 border-b shrink-0">
                 <Command className="w-3.5 h-3.5 text-mute-foreground" />
                 <span className="text-xs text-mute-foreground">快捷指令</span>
             </div>
-            <div className="p-1">
+            <div className="p-1 overflow-auto">
                 {items.map((item, index) => (
                     <button
-                        ref={activeItemRef}
+                        ref={index === activeIndex ? activeItemRef : null}
                         key={item.label}
                         className={cn('flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors',
                             index === activeIndex

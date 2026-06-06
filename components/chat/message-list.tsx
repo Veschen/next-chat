@@ -44,6 +44,11 @@ export function MessageList({
     // 让滚动条自然滚动到最底部
     const bottomRef = useRef<HTMLDivElement>(null)
 
+    // 判断是否应该展示建议回复： 最后一条消息是assistant 且非流式中
+    const showSuggestions = useMemo(() => {
+        return suggestions.length > 0 && !isStreaming && messages.at(-1)?.role === 'assistant' && !!onSuggestionSelect
+    }, [isStreaming, suggestions, messages, onSuggestionSelect])
+
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, isStreaming])
@@ -80,12 +85,6 @@ export function MessageList({
             </div>
         )
     }
-
-    // 判断是否应该展示建议回复： 最后一条消息是assistant 且非流式中
-    const showSuggestions = useMemo(() => {
-        return suggestions.length > 0 && !isStreaming && messages.at(-1)?.role === 'assistant' && !!onSuggestionSelect
-    }, [isStreaming, suggestions, messages, onSuggestionSelect])
-
 
     // 找到最后一条消息的id
     const lastAssistantId = [...messages].reverse().find((msg) => msg.role === 'assistant')?.id

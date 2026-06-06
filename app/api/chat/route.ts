@@ -100,7 +100,7 @@ const MOCK_SCENARIOS: Array<{
             chunkSize: 20 
         },
         { 
-            pattern: /代码|code|编程/, 
+            pattern: /代码|code|函数/, 
             thinking: MOCK_CODE_THINKING, 
             reply: MOCK_CODE_REPLAY,
             chunkSize: 10 
