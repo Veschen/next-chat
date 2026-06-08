@@ -6,6 +6,7 @@ import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from '../ui/select'
 import { useChatStore } from '@/lib/store'
+import { useHydration } from '@/lib/hooks/use-hydration'
 import { ConversationList } from './conversation-list'
 import { ChatInput } from './chat-input'
 import { MessageList } from './message-list'
@@ -17,6 +18,7 @@ import { OPERATION_NAMES } from '@/lib/store/operation-slice'
 export function ChatLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [provider, setProvider] = useState('mock')
+    const isHydrated = useHydration()
 
     const requestOptions: CRequestOptions = useMemo(() => ({
         ...REQUEST_OPTIONS,
@@ -99,6 +101,11 @@ export function ChatLayout() {
         }
     }, [registerOperations, clearOperations])
 
+    // 水合完成前显示默认标题，避免 hydration mismatch
+    const title = isHydrated 
+        ? (currentConversation?.title ?? '新对话')
+        : '新对话'
+
     return (
         <div className="flex h-screen overflow-hidden">
             {/* 侧边栏 */}
@@ -122,7 +129,7 @@ export function ChatLayout() {
                         {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
                     </Button>
                     <h1 className="text-sm font-medium truncate">
-                        {currentConversation?.title ?? '新对话'}
+                        {title}
                     </h1>
                     <div className="flex items-center gap-3">
                         {
