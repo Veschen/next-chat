@@ -12,22 +12,17 @@ import { MessageActions } from './message-actions'
 import { getActiveContent } from '@/lib/store/utils'
 
 /** 文件附件组件 */
-function FileAttachments({ files }: { files: FileItem[] }) {
+function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
+    console.log('%c [ files ]-16', 'font-size:13px; background:pink; color:#bf2c9f;', files)
     if (!files || files.length === 0) return null
 
     const getFileIcon = (mimeType?: string) => {
         const iconClass = 'w-4 h-4'
         if (!mimeType) return <File className={iconClass} />
-        
-        if (mimeType.startsWith('image/')) {
-            return <FileImage className={iconClass} />
-        }
-        if (mimeType.startsWith('audio/')) {
-            return <FileAudio className={iconClass} />
-        }
-        if (mimeType.startsWith('video/')) {
-            return <FileVideo className={iconClass} />
-        }
+        if (mimeType.startsWith('image/')) return <FileImage className={iconClass} />
+        if (mimeType.startsWith('audio/')) return <FileAudio className={iconClass} />
+        if (mimeType.startsWith('video/')) return <FileVideo className={iconClass} />
+
         return <FileText className={iconClass} />
     }
 
@@ -38,25 +33,67 @@ function FileAttachments({ files }: { files: FileItem[] }) {
         return `${(size / (1024 * 1024)).toFixed(1)} MB`
     }
 
+    const truncateFileName = (name: string, maxLength = 20) => {
+        if (name.length <= maxLength) return name
+        const extensionIndex = name.lastIndexOf('.')
+        if (extensionIndex === -1) return name.slice(0, maxLength) + '...'
+        const extension = name.slice(extensionIndex)
+        const baseName = name.slice(0, extensionIndex)
+        const visibleLength = maxLength - extension.length - 1
+        if (visibleLength <= 0) return name.slice(0, maxLength) + '...'
+        return baseName.slice(0, visibleLength) + '...' + extension
+    }
+
+    const isImageFile = (mimeType?: string) => {
+        return mimeType?.startsWith('image/')
+    }
+
     return (
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 space-y-1.5">
             {files.map(file => (
                 <div
                     key={file.uid}
-                    className="flex items-center gap-2 rounded-lg border border-muted/50 p-2 bg-muted/30"
-                >
-                    <div className="flex-shrink-0 text-muted-foreground">
-                        {getFileIcon(file.mimeType)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                    </div>
-                    {file.url && (
-                        <Button variant="ghost" size="sm" className="h-7" onClick={() => window.open(file.url, '_blank')}>
-                            <Download className="w-3.5 h-3.5" />
-                        </Button>
+                    className={cn(
+                        'group relative flex items-center gap-2.5 rounded-lg p-2 ',
+                        isUser
+                            ? 'bg-white/15 text-primary-foreground'
+                            : 'bg-background border border-border'
                     )}
+                >
+                    {/* 图标区 */}
+                    <div className={cn(
+                        'flex flex-shrink-0 rounded-md overflow-hidden items-center justify-center w-9 h-9',
+                        !isImageFile(file.mimeType) && (isUser ? 'bg-white/10' : 'bg-muted')
+                    )}>
+                        {
+                            isImageFile(file.mimeType) && file.url ? (
+                                <img src={file.url} alt={file.name} className="w-9 h-9 object-cover rounded-md" />
+                            ) : (
+                                <span className={isUser ? 'opacity-80' : 'text-muted-foreground'}>
+                                    {getFileIcon(file.mimeType)}
+                                </span>
+                            )
+                        }
+                    </div>
+                    {/* 文件信息 */}
+                    <div className=" flex-1 min-w-0">
+                        <p className="font-medium truncate text-[13px] leading-tight">{truncateFileName(file.name)}</p>
+                        <p className={cn('text-[11px] leading-tight mt-0.5', isUser ? 'opacity-60' : 'text-muted-foreground')}>{formatFileSize(file.size)}</p>
+                    </div>
+
+                    {/* hover 展示完整文件名 */}
+                    { file.name.length > 20 &&
+                        <div className={cn(
+                            'absolute -bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-md z-10',
+                            'bg-gray-900 text-white text-xs whitespace-nowrap',
+                            'opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none',
+                            'after:content-[""] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2',
+                            'after:border-4 after:border-transparent after:border-t-gray-900'
+                        )}>
+                            {file.name}
+                        </div>
+                    }
+
                 </div>
             ))}
         </div>
@@ -111,8 +148,8 @@ function VerisonSwitcher({ message, disabled, onSwitchVersion }: {
             </Button>
             <span className="min-w-[3rem] text-center tabular-nums">
                 {currentIndex + 1}/{totalVersions}
-                </span>
-            <Button 
+            </span>
+            <Button
                 variant="ghost"
                 size="sm"
                 className="h-5 w-5"
@@ -164,7 +201,7 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                                     {activeChild.content}
                                 </p>
                                 {/* 用户消息中的附件 */}
-                                <FileAttachments files={activeChild.fileList ?? []} />
+                                <FileAttachments files={activeChild.fileList ?? []} isUser={isUser} />
                             </>
                         ) : activeChild.loading && !activeChild.content && !hasThinking ? (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
@@ -186,7 +223,7 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                     }
                 </div>
                 {/* 多版本切换器 */}
-                { !isUser && <VerisonSwitcher message={message} disabled={isStreaming} onSwitchVersion={onSwitchVersion} />}
+                {!isUser && <VerisonSwitcher message={message} disabled={isStreaming} onSwitchVersion={onSwitchVersion} />}
                 {
                     !isUser && activeChild.content && (
                         <MessageActions

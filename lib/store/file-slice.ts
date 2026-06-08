@@ -59,9 +59,9 @@ export const createFileSlice: StateCreator<
 
     clearFiles: () => {
         set((state) => {
-             // 释放所有预览图片URL
+             // 释放非图片文件的预览url
             for (const file of state.pendingFiles) {
-                if (file.previewUrl) {
+                if (file.previewUrl && !file.mimeType?.startsWith('image/')) {
                     URL.revokeObjectURL(file.previewUrl)
                 }
             }
@@ -77,7 +77,6 @@ export const createFileSlice: StateCreator<
             .map(f => ({
                 uid: f.uid,
                 name: f.name,
-                url: f.previewUrl,
                 size: f.size,
                 mimeType: f.mimeType,
             }))

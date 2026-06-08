@@ -38,6 +38,7 @@ export function ChatInput({
     const [shortcutOpen, setShortcutOpen] = useState(false)
     const [activeIndex, setActiveIndex] = useState(0)
     const [showAttachments, setShowAttachments] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -73,8 +74,9 @@ export function ChatInput({
         if (isStreaming || disabled) return
 
         const readyFiles = hasFiles ? getReadyFiles() : undefined
-        onSend(trimmedValue, readyFiles)
-        
+        const sendContent = trimmedValue || (hasFiles ? '请分析以下文件' : '')
+        onSend(sendContent, readyFiles)
+
         setValue('')
         setShortcutOpen(false)
         setShowAttachments(false)
@@ -165,6 +167,34 @@ export function ChatInput({
         }
     }, [onAddFiles])
 
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        if (!disabled && !isStreaming) {
+            setIsDragging(true)
+        }
+    }, [disabled, isStreaming])
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+    }, [])
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        if (disabled || isStreaming) return
+        
+        const droppedFiles = Array.from(e.dataTransfer.files)
+        if (droppedFiles.length > 0) {
+            onAddFiles(droppedFiles)
+            setShowAttachments(true)
+        }
+    }, [disabled, isStreaming, onAddFiles])
+
+
+
+
+
     useEffect(() => {
         const textarea = textareaRef.current
         if (!textarea) return
@@ -189,7 +219,7 @@ export function ChatInput({
             <div className="max-w-3xl mx-auto">
                 <div className="relative" ref={containerRef}>
                     <ShortcutList items={filteredShortcuts} visible={shortcutOpen} activeIndex={activeIndex} onSelect={handleShortcutSelect} />
-                    
+
                     {/* 附件面板 */}
                     {showAttachments && hasFiles && (
                         <div className="mb-3 rounded-xl border bg-background p-3 shadow-sm">
@@ -211,7 +241,14 @@ export function ChatInput({
                         </div>
                     )}
 
-                    <div className="flex items-end gap-2 rounded-2xl border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1">
+                    <div 
+                    className={cn('flex items-end gap-2 rounded-2xl border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1',
+                        isDragging && 'ring-2 ring-primary border-primary bg-primary/5'
+                    )}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    >
                         {/* 附件按钮 */}
                         <Button
                             size="icon"
@@ -245,7 +282,7 @@ export function ChatInput({
                         <textarea
                             className={cn(
                                 'flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
-                                'min-h-[36px],max-h-[200px]'
+                                'min-h-[36px] max-h-[200px]'
                             )}
                             ref={textareaRef}
                             value={value}

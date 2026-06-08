@@ -54,7 +54,8 @@ function FileCard({ file, onRemove }: FileCardProps) {
                 size="icon"
                 className={cn(
                     'absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground',
-                    'opacity-0 hover:opacity-100 transition-opacity'
+                    'transition-opacity',
+                    showRemove ? 'opacity-100' : 'opacity-0'
                 )}
                 onClick={() => onRemove(file.uid)}
             >

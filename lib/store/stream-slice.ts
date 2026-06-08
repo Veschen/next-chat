@@ -3,7 +3,7 @@
  * 职责： 发送流式请求、处理流式响应、中止流式请求、重新发送流式请求
  */
 import type { StateCreator } from "zustand"
-import type { StreamSlice, ChatStore, ChatMessage, SSEEventType, MessageContent } from "./types"
+import type { StreamSlice, ChatStore, ChatMessage, SSEEventType, MessageContent, FileItem } from "./types"
 import type { SSEOutput } from "../stream"
 import type { CRequestParams, CRequestOptions, CRequestCallbacks } from "../request"
 import { CRequest } from "../request"
@@ -179,7 +179,7 @@ export const createStreamSlice: StateCreator<
     = (set, get) => ({
         isStreaming: false,
         streamAbortController: null,
-        sendMessage: (content: string, requestOptions: CRequestOptions) => {
+        sendMessage: (content: string, requestOptions: CRequestOptions, fileList?: FileItem[]) => {
             const state = get()
             let conversationId = state.activeConversationId
 
@@ -191,7 +191,7 @@ export const createStreamSlice: StateCreator<
             const userMessage: ChatMessage = {
                 id: generateId(),
                 role: 'user',
-                children: [{ content, msgType: 'text' }],
+                children: [{ content, msgType: 'text', fileList }],
                 currentIndex: 0,
                 timestamp: Date.now(),
             }
