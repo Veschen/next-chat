@@ -1,21 +1,24 @@
 'use client'
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from '../ui/select'
 import { useChatStore } from '@/lib/store'
+import { useHydration } from '@/lib/hooks/use-hydration'
 import { ConversationList } from './conversation-list'
 import { ChatInput } from './chat-input'
 import { MessageList } from './message-list'
 import type { CRequestOptions } from '@/lib/request'
+import type { FileItem } from '@/lib/store/types'
 import { REQUEST_OPTIONS, PROVIDER_OPTIONS, MOCK_SHORTCUTS, WELCOME_QUESTIONS, DEFAULT_SUGGESTIONS } from '@/lib/constants'
-
+import { OPERATION_NAMES } from '@/lib/store/operation-slice'
 
 export function ChatLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [provider, setProvider] = useState('mock')
+    const isHydrated = useHydration()
 
     const requestOptions: CRequestOptions = useMemo(() => ({
         ...REQUEST_OPTIONS,
@@ -29,22 +32,79 @@ export function ChatLayout() {
     const createConversation = useChatStore((state) => state.createConversation)
     const setActiveConversation = useChatStore((state) => state.setActiveConversation)
     const deleteConversation = useChatStore((state) => state.deleteConversation)
+    const renameConversation = useChatStore((state) => state.renameConversation)
     const sendMessage = useChatStore((state) => state.sendMessage)
     const abortStream = useChatStore((state) => state.abortStream)
     const setMessageFeedback = useChatStore((state) => state.setMessageFeedback)
     const regenerateLastMessage = useChatStore((state) => state.regenerateLastMessage)
     const switchMessageVersion = useChatStore((state) => state.switchMessageVersion)
+    
+    // 文件上传相关
+    const pendingFiles = useChatStore((state) => state.pendingFiles)
+    const addFiles = useChatStore((state) => state.addFiles)
+    const removeFile = useChatStore((state) => state.removeFile)
+    const clearFiles = useChatStore((state) => state.clearFiles)
+    const getReadyFiles = useChatStore((state) => state.getReadyFiles)
+
+    // 注册全局操作
+    const registerOperations = useChatStore((state) => state.registerOperations)
+    const clearOperations = useChatStore((state) => state.clearOperations)
 
     const currentConversation = activeConversation()
     const messages = currentConversation?.messages ?? []
 
-    const handleSend = useCallback((content: string) => {
-        sendMessage(content, requestOptions)
-    }, [sendMessage, requestOptions])
+    // 使用 ref 存储最新的回调函数，避免频繁重注册
+    const operationsRef = useRef({
+        sendMessage,
+        setMessageFeedback,
+        regenerateLastMessage,
+        switchMessageVersion,
+        requestOptions,
+    })
+    
+    // 每次渲染时更新 ref
+    operationsRef.current = {
+        sendMessage,
+        setMessageFeedback,
+        regenerateLastMessage,
+        switchMessageVersion,
+        requestOptions,
+    }
 
-    const handleGenerate = useCallback(() => {
-        regenerateLastMessage(requestOptions)
-    }, [regenerateLastMessage, requestOptions])
+    // 注册全局操作（只执行一次）
+    useEffect(() => {
+        const handleSend = (content: string, fileList?: FileItem[]) => {
+            const { sendMessage, requestOptions } = operationsRef.current
+            sendMessage(content, requestOptions, fileList)
+        }
+
+        const handleGenerate = () => {
+            const { regenerateLastMessage, requestOptions } = operationsRef.current
+            regenerateLastMessage(requestOptions)
+        }
+
+        registerOperations({
+            [OPERATION_NAMES.SEND_MESSAGE]: handleSend,
+            [OPERATION_NAMES.REGENERATE]: handleGenerate,
+            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: 'like' | 'dislike' | null) => {
+                operationsRef.current.setMessageFeedback(id, feedback)
+            },
+            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: 'prev' | 'next') => {
+                operationsRef.current.switchMessageVersion(id, direction)
+            },
+            [OPERATION_NAMES.QUESTION_SELECT]: handleSend,
+            [OPERATION_NAMES.SUGGESTION_SELECT]: handleSend,
+        })
+
+        return () => {
+            clearOperations()
+        }
+    }, [registerOperations, clearOperations])
+
+    // 水合完成前显示默认标题，避免 hydration mismatch
+    const title = isHydrated 
+        ? (currentConversation?.title ?? '新对话')
+        : '新对话'
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -57,6 +117,7 @@ export function ChatLayout() {
                         onSelect={setActiveConversation}
                         onCreate={createConversation}
                         onDelete={deleteConversation}
+                        onRename={renameConversation}
                     />
                 </div>
             </div>
@@ -68,7 +129,7 @@ export function ChatLayout() {
                         {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
                     </Button>
                     <h1 className="text-sm font-medium truncate">
-                        {currentConversation?.title ?? '新对话'}
+                        {title}
                     </h1>
                     <div className="flex items-center gap-3">
                         {
@@ -92,24 +153,23 @@ export function ChatLayout() {
                         </Select>
                     </div>
                 </div>
-                {/* 消息列表 */}
+                {/* 消息列表 - 不再传递回调，通过全局操作注册 */}
                 <MessageList
                     messages={messages}
                     isStreaming={isStreaming}
-                    onGenerate={handleGenerate}
-                    onFeedback={setMessageFeedback}
-                    onSwitchVersion={switchMessageVersion}
                     welcomeQuestions={WELCOME_QUESTIONS}
-                    onQuestionSelect={handleSend}
                     suggestions={DEFAULT_SUGGESTIONS}
-                    onSuggestionSelect={handleSend}
                 />
-                {/* 输入框 */}
+                {/* 输入框 - 不再传递回调，通过全局操作注册 */}
                 <ChatInput
-                    onSend={handleSend}
                     onAbort={abortStream}
                     isStreaming={isStreaming}
                     shortcuts={provider === 'mock' ? MOCK_SHORTCUTS : []}
+                    pendingFiles={pendingFiles}
+                    onAddFiles={addFiles}
+                    onRemoveFile={removeFile}
+                    onClearFiles={clearFiles}
+                    getReadyFiles={getReadyFiles}
                 />
             </div>
         </div>

@@ -1,22 +1,39 @@
 /**
  *  ChatStore主入口
- * 使用zustand + immer + devtools
+ * 使用zustand + immer + devtools + persist
  */
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
-import { devtools } from "zustand/middleware"
-import type { ChatStore } from "./types"
+import { devtools, persist } from "zustand/middleware"
+import type { ChatStore, Conversation } from "./types"
 import { createConversationSlice } from "./conversation-slice"
 import { createMessageSlice } from "./message-slice"
 import { createStreamSlice } from "./stream-slice"
+import { createFileSlice } from "./file-slice"
+import { createOperationSlice } from "./operation-slice"
+
+// 持久化存储的键名
+const STORAGE_KEY = 'next-chat-storage'
 
 export const useChatStore = create<ChatStore>()(
     devtools(
-        immer((...args) => ({
-            ...createConversationSlice(...args),
-            ...createMessageSlice(...args),
-            ...createStreamSlice(...args),
-        })),
+        persist(
+            immer((...args) => ({
+                ...createConversationSlice(...args),
+                ...createMessageSlice(...args),
+                ...createStreamSlice(...args),
+                ...createFileSlice(...args),
+                ...createOperationSlice(...args),
+            })),
+            {
+                name: STORAGE_KEY,
+                // 只持久化会话相关数据
+                partialize: (state) => ({
+                    conversations: state.conversations,
+                    activeConversationId: state.activeConversationId,
+                }),
+            }
+        ),
         {
             name: 'chat-store',
         }

@@ -1,21 +1,25 @@
 'use client'
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Copy, Check, ThumbsUp, RefreshCw, ThumbsDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { ChatMessage } from '@/lib/store/types'
 import { getActiveContent } from '@/lib/store/utils'
+import { useChatStore } from '@/lib/store'
+import { OPERATION_NAMES } from '@/lib/store/operation-slice'
 
 interface MessageActionsProps {
     message: ChatMessage
-    isLastAssistant: boolean
-    onGenerate: () => void
-    onFeedback: (id: string, feedback: 'like' | 'dislike' | null) => void
+    isLastAssistant?: boolean
 }
 
-export function MessageActions({ message, isLastAssistant, onGenerate, onFeedback }: MessageActionsProps) {
+export function MessageActions({ message, isLastAssistant = false }: MessageActionsProps) {
     const [copied, setCopied] = useState(false)
+    
+    // 从全局操作注册表获取操作
+    const operationsMap = useChatStore((state) => state.operationsMap)
+    
     const activeChild = getActiveContent(message)
 
     const handleCopy = useCallback(() => {
@@ -27,12 +31,16 @@ export function MessageActions({ message, isLastAssistant, onGenerate, onFeedbac
     }, [activeChild.content])
 
     const handleLike = useCallback(() => {
-        onFeedback(message.id, 'like')
-    }, [message.id, onFeedback])
+        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'like')
+    }, [message.id, operationsMap])
 
     const handleDislike = useCallback(() => {
-        onFeedback(message.id, 'dislike')
-    }, [message.id, onFeedback])
+        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'dislike')
+    }, [message.id, operationsMap])
+
+    const handleGenerate = useCallback(() => {
+        operationsMap[OPERATION_NAMES.REGENERATE]?.()
+    }, [operationsMap])
 
     return (
         <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -95,7 +103,7 @@ export function MessageActions({ message, isLastAssistant, onGenerate, onFeedbac
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <span className="inline-flex">
-                                <Button onClick={onGenerate} variant="ghost" size="icon" className="w-7 h-7">
+                                <Button onClick={handleGenerate} variant="ghost" size="icon" className="w-7 h-7">
                                     <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
                                 </Button>
                             </span>

@@ -13,7 +13,7 @@ export type SSEEventType =
 
 export type SSEEventHandler = (data: Record<string, any>) => void
 
-export type MessageType = 'text' | 'image' |'markdown'| 'file'
+export type MessageType = 'text' | 'image' | 'markdown' | 'file'
 
 /** 附件 文件 */
 export interface FileItem {
@@ -38,6 +38,8 @@ export interface MessageContent {
     isThinking?: boolean
     /** 是否正在加载 */
     loading?: boolean
+    /** 思考耗时（毫秒） */
+    thinkingDuration?: number
 }
 
 
@@ -76,6 +78,37 @@ export interface ConversationSlice {
     setActiveConversation: (id: string) => void
     /** 删除会话 */
     deleteConversation: (id: string) => void
+    /** 重命名会话 */
+    renameConversation: (id: string, title: string) => void
+}
+
+export interface UploadingFile {
+    uid: string
+    name: string
+    size?: number
+    mimeType?: string
+    status?: 'uploading' | 'done' | 'failed'
+    progress?: number
+    /** 预览图片URL, 仅对图片文件有效 */
+    previewUrl?: string
+    /** 上传完成的文件对象，用于发送到服务器 */
+    file?: File
+    errorMessage?: string
+}
+
+export interface FileSlice {
+    /** 待上传文件列表 */
+    pendingFiles: UploadingFile[]
+    /** 是否正在上传文件 */
+    isUploading: boolean
+    /** 添加待上传文件 */
+    addFiles: (files: File[]) => void
+    /** 删除文件 */
+    removeFile: (uid: string) => void
+    /** 清空所有待上传文件 */
+    clearFiles: () => void
+    /** 获取已上传文件列表 */
+    getReadyFiles: () => FileItem[]
 }
 
 /** 消息管理 slice状态 + 操作函数 */
@@ -90,13 +123,32 @@ export interface MessageSlice {
 export interface StreamSlice {
     isStreaming: boolean
 
-    /** 发送消息（触发流式请求） */
-    sendMessage: (content: string, requestOptions: CRequestOptions) => void
+    /** 发送消息（触发流式请求）,可附带文件 */
+    sendMessage: (content: string, requestOptions: CRequestOptions, fileList?: FileItem[]) => void
     /** 中止当前流式请求 */
     abortStream: () => void
     /** 重新生成最后一条回复 */
     regenerateLastMessage: (requestOptions: CRequestOptions) => void
 }
 
+/** 全局操作处理函数 */
+export type OperationHandler = (...args: any[]) => any
+
+/** 全局操作注册slice */
+export interface OperationSlice {
+    /** 操作注册表 */
+    operationsMap: Record<string, OperationHandler>
+    /** 注册操作 */
+    registerOperation: (name: string, handler: OperationHandler) => void
+    /** 注销操作 */
+    unregisterOperation: (name: string) => void
+    /** 获取已注册的操作处理函数 */
+    getOperation: (name: string) => OperationHandler | undefined
+    /** 批量注册操作 */
+    registerOperations: (operations: Record<string, OperationHandler>) => void
+    /** 清空所有操作 */
+    clearOperations: () => void
+}
+
 /** 完整的ChatStore 类型 = Slice聚合 */
-export type ChatStore = ConversationSlice & MessageSlice & StreamSlice
+export type ChatStore = ConversationSlice & MessageSlice & StreamSlice & FileSlice & OperationSlice

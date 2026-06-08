@@ -49,13 +49,23 @@ export const MOCK_SHORTCUTS: ShortcutItem[] = [
     },
     {
         label: '图表可视化',
-        description: '生成数据可视化图表',
+        description: '画流程图',
         prompt: '帮我画一个流程图',
     },
     {
         label: '公式推导',
         description: '推导数学公式',
         prompt: '帮我推导几个数学公式，比如二次方程求根公式等',
+    },
+    {
+        label: 'EChart图表',
+        description: '生成数据可视化图表',
+        prompt: '帮我生成一个EChart图表示例，展示不同产品的月度销售额对比',
+    },
+    {
+        label: 'HTML演示',
+        description: '生成交互式HTML演示页面',
+        prompt: '帮我生成一个HTML交互动画演示示例',
     },
 ]
 

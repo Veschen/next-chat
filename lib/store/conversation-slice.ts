@@ -49,4 +49,13 @@ export const createConversationSlice: StateCreator<
             }
         }, false, 'conversation/delete')
     },
+    renameConversation: (id: string, title: string) => {
+        const trimmed = title.trim()
+        if (!trimmed) return
+        set((state) => {
+            const index = state.conversations.findIndex(c => c.id === id)
+            if (index === -1) return
+            state.conversations[index].title = trimmed
+        }, false, 'conversation/rename')
+    },
 })

@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils"
 import {
     MermaidDiagram,
     CardBlock,
+    EChartBlock,
+    HTMLBlock,
     useMarkdownPlugins,
     findCustomRenderer,
     type CustomCodeBlockRenderer,
@@ -18,7 +20,7 @@ import {
 } from "./markdown-extensions"
 import { useStreamContent } from "@/lib/hooks/use-stream-content"
 import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/github-dark.min.css'
+import 'highlight.js/styles/monokai.min.css'
 
 interface MarkdownRenderProps {
     content: string
@@ -39,7 +41,7 @@ interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
     customRenderers: CustomCodeBlockRenderer[]
 }
 
-const RAW_TEXT_LANGUAGE = new Set(['mermaid', 'card'])
+const RAW_TEXT_LANGUAGE = new Set(['mermaid', 'card', 'echart', 'html'])
 
 function extractText(node: React.ReactNode): string {
     if (!node) return ''
@@ -110,6 +112,30 @@ function CodeBlock({
                     {children}
                 </code>
                 <MermaidDiagram content={codeText} />
+            </>
+        )
+    }
+
+    // EChart 图表渲染
+    if (language === 'echart') {
+        return (
+            <>
+                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                    {children}
+                </code>
+                <EChartBlock content={codeText} />
+            </>
+        )
+    }
+
+    // HTML 代码块渲染
+    if (language === 'html') {
+        return (
+            <>
+                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                    {children}
+                </code>
+                <HTMLBlock content={codeText} />
             </>
         )
     }
