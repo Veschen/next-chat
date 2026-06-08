@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Bot } from 'lucide-react'
+import { Bot, ArrowUp, ArrowDown } from 'lucide-react'
 import { ScrollArea } from '../ui/scroll-area'
+import { Button } from '../ui/button'
 import { MessageBubble } from './message-bubble'
 import { Suggestions } from './suggestions'
 import { useChatStore } from '@/lib/store'
@@ -32,9 +33,68 @@ export function MessageList({
     // 从全局操作注册表获取操作
     const operationsMap = useChatStore((state) => state.operationsMap)
     const isHydrated = useHydration()
-    
+
     // 让滚动条自然滚动到最底部
     const bottomRef = useRef<HTMLDivElement>(null)
+    const viewportRef = useRef<HTMLDivElement | null>(null)
+
+    // 滚动状态：是否可向上/向下滚动
+    const [canScrollUp, setCanScrollUp] = useState(false)
+    const [canScrollDown, setCanScrollDown] = useState(false)
+
+    /**
+     * 检测当前滚动容器的滚动能力
+     * 向上/向下按钮互斥：靠近底部时显示向上，靠近顶部时显示向下
+     * @param el - 滚动视口元素
+     */
+    const checkScroll = useCallback((el: HTMLDivElement) => {
+        const { scrollTop, scrollHeight, clientHeight } = el
+        const hasOverflow = scrollHeight > clientHeight
+        if (!hasOverflow) {
+            setCanScrollUp(false)
+            setCanScrollDown(false)
+            return
+        }
+        const scrollBottom = scrollHeight - clientHeight - scrollTop
+        // 距离底部更远（靠近顶部）显示向下，否则显示向上
+        if (scrollTop > scrollBottom) {
+            setCanScrollUp(true)
+            setCanScrollDown(false)
+        } else {
+            setCanScrollUp(false)
+            setCanScrollDown(true)
+        }
+    }, [])
+
+    // 监听滚动事件并检测滚动能力
+    useEffect(() => {
+        const viewport = viewportRef.current
+        if (!viewport) return
+
+        const handleScroll = () => checkScroll(viewport)
+        // 初始化检测一次
+        handleScroll()
+
+        viewport.addEventListener('scroll', handleScroll)
+        // 使用 ResizeObserver 监听内容变化，重新计算滚动能力
+        const ro = new ResizeObserver(() => handleScroll())
+        ro.observe(viewport)
+
+        return () => {
+            viewport.removeEventListener('scroll', handleScroll)
+            ro.disconnect()
+        }
+    }, [checkScroll, messages])
+
+    /** 滚动到顶部 */
+    const scrollToTop = useCallback(() => {
+        viewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    }, [])
+
+    /** 滚动到底部 */
+    const scrollToBottom = useCallback(() => {
+        viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' })
+    }, [])
 
     // 判断是否应该展示建议回复： 最后一条消息是assistant 且非流式中
     const showSuggestions = useMemo(() => {
@@ -56,7 +116,16 @@ export function MessageList({
 
     return (
         <ScrollArea className="flex-1 min-h-0 overflow-hidden">
-            <div className="max-w-3xl mx-auto py-4 min-h-full">
+            <div ref={(node) => {
+                // 获取 radix ScrollArea 内部的 viewport 节点
+                if (node) {
+                    const viewport = node.closest('[data-slot="scroll-area-viewport"]') as HTMLDivElement | null
+                    if (viewport && viewport !== viewportRef.current) {
+                        viewportRef.current = viewport
+                        checkScroll(viewport)
+                    }
+                }
+            }} className="max-w-3xl mx-auto py-4 min-h-full">
                 {!hasMessages ? (
                     // 空状态 - 欢迎页面
                     <div className="flex flex-col items-center justify-center text-muted-foreground gap-6 p-8 min-h-full">
@@ -109,6 +178,34 @@ export function MessageList({
                 )}
                 <div ref={bottomRef} />
             </div>
+
+            {/* 快速定位按钮：根据滚动状态显示向上/向下箭头，互斥显示 */}
+            {(canScrollUp || canScrollDown) && (
+                <div className="absolute right-58 bottom-4 z-10">
+                    {canScrollUp && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={scrollToTop}
+                            className="rounded-full shadow-lg bg-background/90 backdrop-blur-sm h-10 w-10"
+                            aria-label="滚动到顶部"
+                        >
+                            <ArrowUp className="h-5 w-5" />
+                        </Button>
+                    )}
+                    {canScrollDown && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={scrollToBottom}
+                            className="rounded-full shadow-lg bg-background/90 backdrop-blur-sm h-10 w-10"
+                            aria-label="滚动到底部"
+                        >
+                            <ArrowDown className="h-5 w-5" />
+                        </Button>
+                    )}
+                </div>
+            )}
         </ScrollArea>
     )
 }
