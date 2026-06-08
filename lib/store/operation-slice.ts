@@ -3,25 +3,7 @@
  * 用于解耦组件间的回调透传，通过注册-调用的方式替代 props drilling
  */
 import type { StateCreator } from "zustand"
-import type { ChatStore } from "./types"
-
-// 操作处理器类型
-export type OperationHandler = (...args: unknown[]) => void | Promise<void>
-
-export interface OperationSlice {
-    /** 操作注册表 */
-    operationsMap: Record<string, OperationHandler>
-    /** 注册操作 */
-    registerOperation: (name: string, handler: OperationHandler) => void
-    /** 注销操作 */
-    unregisterOperation: (name: string) => void
-    /** 获取已注册的操作处理函数 */
-    getOperation: (name: string) => OperationHandler | undefined
-    /** 批量注册操作 */
-    registerOperations: (operations: Record<string, OperationHandler>) => void
-    /** 清空所有操作 */
-    clearOperations: () => void
-}
+import type { ChatStore, OperationHandler, OperationSlice } from "./types"
 
 // 操作名称常量
 export const OPERATION_NAMES = {

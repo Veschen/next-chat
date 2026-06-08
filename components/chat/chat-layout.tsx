@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '../ui/button'
@@ -51,21 +51,45 @@ export function ChatLayout() {
     const currentConversation = activeConversation()
     const messages = currentConversation?.messages ?? []
 
-    const handleSend = useCallback((content: string, fileList?: FileItem[]) => {
-        sendMessage(content, requestOptions, fileList)
-    }, [sendMessage, requestOptions])
+    // 使用 ref 存储最新的回调函数，避免频繁重注册
+    const operationsRef = useRef({
+        sendMessage,
+        setMessageFeedback,
+        regenerateLastMessage,
+        switchMessageVersion,
+        requestOptions,
+    })
+    
+    // 每次渲染时更新 ref
+    operationsRef.current = {
+        sendMessage,
+        setMessageFeedback,
+        regenerateLastMessage,
+        switchMessageVersion,
+        requestOptions,
+    }
 
-    const handleGenerate = useCallback(() => {
-        regenerateLastMessage(requestOptions)
-    }, [regenerateLastMessage, requestOptions])
-
-    // 注册全局操作
+    // 注册全局操作（只执行一次）
     useEffect(() => {
+        const handleSend = (content: string, fileList?: FileItem[]) => {
+            const { sendMessage, requestOptions } = operationsRef.current
+            sendMessage(content, requestOptions, fileList)
+        }
+
+        const handleGenerate = () => {
+            const { regenerateLastMessage, requestOptions } = operationsRef.current
+            regenerateLastMessage(requestOptions)
+        }
+
         registerOperations({
             [OPERATION_NAMES.SEND_MESSAGE]: handleSend,
             [OPERATION_NAMES.REGENERATE]: handleGenerate,
-            [OPERATION_NAMES.FEEDBACK]: setMessageFeedback,
-            [OPERATION_NAMES.SWITCH_VERSION]: switchMessageVersion,
+            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: 'like' | 'dislike' | null) => {
+                operationsRef.current.setMessageFeedback(id, feedback)
+            },
+            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: 'prev' | 'next') => {
+                operationsRef.current.switchMessageVersion(id, direction)
+            },
             [OPERATION_NAMES.QUESTION_SELECT]: handleSend,
             [OPERATION_NAMES.SUGGESTION_SELECT]: handleSend,
         })
@@ -73,7 +97,7 @@ export function ChatLayout() {
         return () => {
             clearOperations()
         }
-    }, [registerOperations, clearOperations, handleSend, handleGenerate, setMessageFeedback, switchMessageVersion])
+    }, [registerOperations, clearOperations])
 
     return (
         <div className="flex h-screen overflow-hidden">
