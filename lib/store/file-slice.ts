@@ -77,6 +77,7 @@ export const createFileSlice: StateCreator<
             .map(f => ({
                 uid: f.uid,
                 name: f.name,
+                url: f.previewUrl,
                 size: f.size,
                 mimeType: f.mimeType,
             }))

@@ -13,7 +13,6 @@ import { getActiveContent } from '@/lib/store/utils'
 
 /** 文件附件组件 */
 function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
-    console.log('%c [ files ]-16', 'font-size:13px; background:pink; color:#bf2c9f;', files)
     if (!files || files.length === 0) return null
 
     const getFileIcon = (mimeType?: string) => {
