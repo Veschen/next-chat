@@ -37,11 +37,26 @@ function createStreamCallBacks(
 ): CRequestCallbacks<SSEOutput> {
     let accumulatedContent = ''
     let accumulatedThinking = ''
+    let thinkingStartTime: number | null = null
+    let firstMessageReceived = false
 
     // 按event类型分发处理
     const eventHandlers: Record<SSEEventType, (data: Record<string, any>) => void> = {
         // 正常消息
         message: (data) => {
+            // 首次message事件时记录思考耗时
+            if (!firstMessageReceived && thinkingStartTime !== null) {
+                const thinkingDuration = Date.now() - thinkingStartTime
+                set((state) => {
+                    const { message } = findTargetMessage(state, conversationId, targetMessageId)
+                    const child = message && getActiveContent(message)
+                    if (child) {
+                        child.thinkingDuration = thinkingDuration
+                    }
+                }, false, 'stream/onUpdate/thinkingDuration')
+            }
+            firstMessageReceived = true
+            
             accumulatedContent += data.content || ''
             set((state) => {
                 const { message } = findTargetMessage(state, conversationId, targetMessageId)
@@ -55,6 +70,11 @@ function createStreamCallBacks(
         },
         // 思考中
         thinking: (data) => {
+            // 首次thinking事件时开始计时
+            if (thinkingStartTime === null) {
+                thinkingStartTime = Date.now()
+            }
+            
             accumulatedThinking += data.content || ''
             set((state) => {
                 const { message } = findTargetMessage(state, conversationId, targetMessageId)

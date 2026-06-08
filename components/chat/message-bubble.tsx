@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useEffect, useState } from 'react'
 import { User, Bot, Loader2, ChevronDown, ChevronRight, ChevronLeft, Brain, FileText, FileImage, FileAudio, FileVideo, File } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -101,9 +102,25 @@ function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?
 }
 
 /** 思考过程折叠面板 */
-function ThinkingBlock({ thinking, isThinking }: { thinking: string, isThinking: boolean }) {
+function ThinkingBlock({ thinking, isThinking, thinkingDuration }: { thinking: string, isThinking: boolean, thinkingDuration?: number }) {
+    // 思考完成后自动折叠，思考中时展开
+    // 使用本地状态允许用户手动切换，但思考中强制展开
+    const [isOpen, setIsOpen] = useState(isThinking)
+    
+    // 思考中时强制展开
+    useEffect(() => {
+        if (isThinking) {
+            setIsOpen(true)
+        }
+    }, [isThinking])
+
+    const formatDuration = (ms: number) => {
+        if (ms < 1000) return `${ms}ms`
+        return `${(ms / 1000).toFixed(1)}s`
+    }
+
     return (
-        <Collapsible defaultOpen className="mb-2">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mb-2">
             <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="group/trigger h-auto gap-1.5 px-1 py-1 text-xs text-muted-foreground hover:text-foreground">
                     {isThinking ?
@@ -111,15 +128,16 @@ function ThinkingBlock({ thinking, isThinking }: { thinking: string, isThinking:
                         : (<Brain className="h-3 w-3" />)
                     }
                     <span>{isThinking ? '思考中...' : '思考过程'}</span>
+                    {thinkingDuration && !isThinking && (
+                        <span className="text-muted-400">({formatDuration(thinkingDuration)})</span>
+                    )}
                     <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=closed]/trigger:hidden" />
                     <ChevronRight className="h-3 w-3 transition-transform duration-200 group-data-[state=open]/trigger:hidden" />
                 </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
                 <div className="border-l-2 border-muted-foreground/20 pl-3 mt-1">
-                    <p className="text-xs text-muted-foreground leading-5 whitespace-pre-wrap">
-                        {thinking}
-                    </p>
+                    <MarkdownRender content={thinking} className="text-xs text-muted-foreground leading-5" />
                 </div>
             </CollapsibleContent>
         </Collapsible>
@@ -212,7 +230,11 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                             <>
                                 {
                                     hasThinking && (
-                                        <ThinkingBlock thinking={activeChild.thinking!} isThinking={!!activeChild.isThinking} />
+                                        <ThinkingBlock 
+                                            thinking={activeChild.thinking!} 
+                                            isThinking={!!activeChild.isThinking} 
+                                            thinkingDuration={activeChild.thinkingDuration}
+                                        />
                                     )
                                 }
                                 {activeChild.content && <MarkdownRender content={activeChild.content} />}

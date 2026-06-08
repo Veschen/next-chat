@@ -38,6 +38,8 @@ export interface MessageContent {
     isThinking?: boolean
     /** 是否正在加载 */
     loading?: boolean
+    /** 思考耗时（毫秒） */
+    thinkingDuration?: number
 }
 
 

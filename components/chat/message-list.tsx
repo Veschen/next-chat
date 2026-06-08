@@ -59,7 +59,7 @@ export function MessageList({
             <div className="max-w-3xl mx-auto py-4 min-h-full">
                 {!hasMessages ? (
                     // 空状态 - 欢迎页面
-                    <div className="flex flex-col items-center justify-center text-muted-foreground gap-6 p-8 min-h-[calc(100vh-200px)]">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground gap-6 p-8 min-h-full">
                         <div className="rounded-full bg-emerald-500/10 p-4">
                             <Bot className="h-8 w-8 text-emerald-500" />
                         </div>
