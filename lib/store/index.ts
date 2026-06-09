@@ -24,6 +24,14 @@ export const useChatStore = create<ChatStore>()(
                 ...createStreamSlice(...args),
                 ...createFileSlice(...args),
                 ...createOperationSlice(...args),
+                // Provider 状态
+                provider: 'mock',
+                setProvider: (provider: string) => {
+                    const [set] = args
+                    set((state) => {
+                        state.provider = provider
+                    })
+                },
             })),
             {
                 name: STORAGE_KEY,
@@ -31,6 +39,7 @@ export const useChatStore = create<ChatStore>()(
                 partialize: (state) => ({
                     conversations: state.conversations,
                     activeConversationId: state.activeConversationId,
+                    provider: state.provider,
                 }),
             }
         ),

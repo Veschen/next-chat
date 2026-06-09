@@ -33,12 +33,18 @@ interface MarkdownRenderProps {
     isMessageEnd?: boolean
     /** 输入完成回调 */
     onTypingComplete?: () => void
+    /** 发送消息回调（用于卡片按钮交互） */
+    onSendMessage?: (message: string) => void
+    /** 是否启用卡片按钮（仅最新消息启用） */
+    enabled?: boolean
 }
 
 interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
     children?: React.ReactNode
     enableMermaid: boolean
     customRenderers: CustomCodeBlockRenderer[]
+    onSendMessage?: (message: string) => void
+    enabled?: boolean
 }
 
 const RAW_TEXT_LANGUAGE = new Set(['mermaid', 'card', 'echart', 'html'])
@@ -64,6 +70,8 @@ function CodeBlock({
     children,
     enableMermaid,
     customRenderers,
+    onSendMessage,
+    enabled = true,
     ...props
 }: CodeBlockProps) {
     const [copied, setCopied] = useState(false)
@@ -147,7 +155,7 @@ function CodeBlock({
                 <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
                     {children}
                 </code>
-                <CardBlock content={codeText} />
+                <CardBlock content={codeText} onSendMessage={onSendMessage} enabled={enabled} />
             </>
         )
     }
@@ -171,7 +179,7 @@ function CodeBlock({
                     {copied ? '已复制' : '复制'}
                 </button>
             </div>
-            <pre className="!mt-0 !rounded-t-none bg-zinc-800">
+            <pre className="!mt-0 !rounded-t-none bg-zinc-800 overflow-x-auto whitespace-pre-wrap break-all">
                 <code className={className} {...props}>
                     {children}
                 </code>
@@ -187,6 +195,8 @@ export function MarkdownRender({
     streaming = false,
     isMessageEnd = true,
     onTypingComplete,
+    onSendMessage,
+    enabled = true,
 }: MarkdownRenderProps) {
     const contextPlugins = useMarkdownPlugins()
     const config = useMemo(() =>
@@ -227,10 +237,12 @@ export function MarkdownRender({
                     {...props}
                     enableMermaid={enableMermaid}
                     customRenderers={customRenderers}
+                    onSendMessage={onSendMessage}
+                    enabled={enabled}
                 />
             )
         }
-    }, [enableMermaid, customRenderers])
+    }, [enableMermaid, customRenderers, onSendMessage, enabled])
 
     return (
         <div className={cn('prose prose-sm max-w-none dark:prose-invert', className)}>

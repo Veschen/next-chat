@@ -1,194 +1,258 @@
 # Next Chat 💬
 
-一个基于 Next.js 16 的 AI 智能聊天应用，支持 Markdown 渲染、代码高亮和流式响应。
+**让大模型自己生成用户界面。**
 
-## 功能特性 ✨
+![应用预览](./public/images/image.png)
 
-- 💬 **实时对话** - 支持与 AI 进行流畅的对话交互
-- 📝 **Markdown 渲染** - 支持丰富的 Markdown 语法，包括标题、列表、代码块等
-- 🎨 **代码高亮** - 代码块自动语法高亮显示
-- 🌊 **流式响应** - 支持 SSE 流式输出，边生成边展示
-- 🎯 **对话管理** - 支持创建、切换和删除多个对话
-- 🌙 **暗色模式** - 自动适配亮色/暗色主题
-- 📱 **响应式设计** - 适配各种屏幕尺寸
-- 👍 **消息反馈** - 支持对 AI 回复点赞/点踩
-- 🔄 **重新生成** - 支持重新生成 AI 回复
-- 🚀 **多 Provider 支持** - 支持 Mock、OpenAI 兼容接口、Ollama 三种模式
+---
 
-## 技术栈 🛠️
+## 🎯 一句话说明
 
-- **框架**: Next.js 16 (App Router)
-- **React**: 19.2.7
-- **UI 组件**: shadcn/ui + Radix UI
-- **样式**: Tailwind CSS 4
-- **状态管理**: Zustand 5
-- **Markdown**: react-markdown + remark-gfm + rehype-highlight
-- **图标**: Lucide React
-- **语言**: TypeScript 5
+Next Chat 是一套AI 生成界面(AI-Generated UI)的开发框架。
 
-## 快速开始 🚀
+不同于传统的聊天界面，Next Chat 的核心能力是：**让大模型通过 Markdown 语法直接生成可交互的用户界面**。你只需要告诉 AI "用卡片展示订单详情"，它就能渲染出一个带标签页、按钮、数据的卡片组件。
 
-### 环境要求
+## ✨ 核心价值
 
-- Node.js 24+
-- npm / yarn / pnpm
+### 1. 🎨 AI 生成界面：Markdown 即 UI
 
-### 安装依赖
+大模型返回的内容不是纯文本，而是**可交互的界面组件**：
+数据结构参考如下：
+
+```card
+{
+  "title": "订单 #12345",
+  "tabs": [
+    { "label": "基本信息", "content": "..." },
+    { "label": "物流信息", "content": "..." }
+  ],
+  "footer": {
+    "buttons": [
+      { "text": "确认收货", "actionType": "confirm" }
+    ]
+  }
+}
+```
+
+**支持的 AI 生成组件**：
+
+| 组件 | 语法 | 说明 |
+|------|------|------|
+| 📋 交互卡片 | ` ```card ` | 结构化数据 + 标签页 + 按钮 |
+| 📊 数据图表 | ` ```echart ` | ECharts 可视化 |
+| 📈 流程图 | ` ```mermaid ` | Mermaid 图表 |
+| 🔢 数学公式 | ` $E=mc^2$ ` | LaTeX 渲染 |
+| 🎨 交互页面 | ` ```html ` | 沙箱运行 HTML |
+| � 代码块 | ` ```python ` | 语法高亮 + 复制 |
+| 📝 表格 | Markdown 表格 | 数据对比 |
+|其他组件|` ```xxx ` | 可扩展其他自定义组件 |
+
+> 💡 **核心理念**：组件可无限扩展，新增一个组件类型，大模型就能生成一种新界面。
+
+### 2. 🔌 开箱即用的 API 调试前端
+
+集成真实 AI 服务前，需要一个界面来调试接口。Next Chat 提供完整的对话前端：
+
+```
+npm run dev
+→ 访问 http://localhost:3000
+```
+
+**能力**：
+- ✅ 流式响应（SSE）
+- ✅ Provider 切换（Mock / OpenAI / Ollama）
+- ✅ 消息反馈（👍 👎）
+- ✅ 重新生成
+- ✅ 快捷指令 + 建议回复
+- ✅ 对话历史管理
+
+**Mock 模式内置场景**（无需 API Key）：
+
+| 快捷指令 | 返回内容 |
+|----------|----------|
+| 热量分析 | 📋 卡片 + 标签页 |
+| 代码编写 | 💻 高亮代码 |
+| 数据表格 | 📊 Markdown 表格 |
+| 图表可视化 | 📈 Mermaid 流程图 |
+| 公式推导 | 🔢 LaTeX 公式 |
+| EChart图表 | 📊 ECharts 图表 |
+| HTML演示 | 🎨 交互动画 |
+
+### 3. 🧩 可嵌入的 AI 助手组件
+
+不想用完整页面？只需几行代码，把 AI 助手嵌入到你的系统里：
+
+```tsx
+import { Entrance } from '@/components/ai-assistant/entrance'
+import { HoverIcon } from '@/components/ai-assistant/hover-icon'
+
+// 嵌入到任意页面
+<Entrance
+  visible={showAssistant}
+  onClose={() => setShowAssistant(false)}
+  agentPresets={[
+    {
+      name: '数据分析助手',
+      description: '专注业务数据洞察',
+      faq: [
+        { label: '本月销售额', icon: '📊', prompt: '...' },
+      ]
+    }
+  ]}
+/>
+```
+
+**接入效果**：
+![AI 助手组件](./public/images/image-1.png)
+
+**适用场景**：
+- 📊 数据分析平台 → 加一个"数据问答助手"
+- 🛒 电商后台 → 加一个"运营助手"
+- 📚 帮助中心 → 加一个"文档助手"
+- 📋 管理系统 → 加一个"智能客服"
+
+## 🏗️ 架构设计
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      你的页面                             │
+│  ┌─────────────────────────────────────────────────┐     │
+│  │  Entrance / HoverIcon  ← 可复用组件             │     │
+│  │  ┌───────────────────────────────────────────┐ │     │
+│  │  │           对话界面                        │ │     │
+│  │  │  ┌─────────────────────────────────────┐  │ │     │
+│  │  │  │    MarkdownRender                   │  │ │     │
+│  │  │  │  ┌─────────────────────────────┐    │  │ │     │
+│  │  │  │  │  ```card  → <CardBlock />   │    │  │ │     │
+│  │  │  │  │  ```echart → <EChartBlock />│    │  │ │     │
+│  │  │  │  │  ```mermaid→ <MermaidDiagram│    │  │ │     │
+│  │  │  │  │  ```html  → <HTMLBlock />   │    │  │ │     │
+│  │  │  │  │  $公式$   → <KaTeX />       │    │  │ │     │
+│  │  │  │  └─────────────────────────────┘    │  │ │     │
+│  │  │  └─────────────────────────────────────┘  │ │     │
+│  │  └───────────────────────────────────────────┘ │     │
+│  └─────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│                    /api/chat                            │
+│   Mock ←──────→  OpenAI ←──────→  Ollama               │
+│   (内置场景)     (通义千问)        (本地模型)            │
+└─────────────────────────────────────────────────────────┘
+```
+
+**三层能力**：
+
+| 层级 | 说明 |
+|------|------|
+| **表现层** | MarkdownRender 解析 Markdown + 自定义组件 |
+| **交互层** | 卡片按钮交互 → 发送消息 → 触发 AI 继续响应 |
+| **接入层** | Entrance 组件 → 嵌入任意页面 |
+
+## 🚀 快速开始
+
+### 安装
 
 ```bash
 npm install
-# 或
-yarn install
-# 或
-pnpm install
 ```
 
-### 配置环境变量
-
-复制 `.env.example` 文件为 `.env.local` 并配置您的 API 密钥：
-
-```bash
-cp .env.example .env.local
-```
-
-编辑 `.env.local` 文件：
-
-```env
-# OpenAI/阿里云 DashScope API 配置
-OPENAI_API_KEY=your-api-key-here
-OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
-OPENAI_MODEL=qwen-max
-
-# Ollama 配置
-OLLAMA_BASE_URL=https://mlvoca.com/api/generate
-OLLAMA_MODEL=deepseek-r1:1.5b
-
-```
-
-### 启动开发服务器
+### 启动
 
 ```bash
 npm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看应用。
+| 页面 | 地址 | 用途 |
+|------|------|------|
+| 对话首页 | http://localhost:3000 | 完整对话界面 |
+| AI 助手演示 | http://localhost:3000/demo | 嵌入式助手效果 |
 
-### 构建生产版本
+### 配置 AI（可选）
+
+默认 Mock 模式，无需任何配置。
 
 ```bash
-npm run build
-npm run start
+cp .env.example .env.local
 ```
 
-## 使用说明 📖
+```env
+# 通义千问
+OPENAI_API_KEY=sk-xxxx
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+OPENAI_MODEL=qwen-max
+```
 
-### 基本操作
+## 🛠️ 技术栈
 
-1. **发送消息**: 在输入框中输入内容，按 Enter 发送
-2. **换行**: 按 Shift + Enter 换行
-3. **终止生成**: 点击停止按钮终止 AI 回复
-4. **新建对话**: 点击侧边栏的新建按钮
-5. **切换对话**: 点击侧边栏中的历史对话
-6. **删除对话**: 点击对话旁边的删除按钮
+| 类别 | 技术 |
+|------|------|
+| 框架 | Next.js 16 (App Router) |
+| React | 19 |
+| TypeScript | 5 |
+| UI | shadcn/ui + Radix UI |
+| 样式 | Tailwind CSS 4 |
+| 状态 | Zustand 5 |
+| Markdown | react-markdown + remark-gfm |
+| 图表 | Mermaid + ECharts |
+| 公式 | KaTeX |
 
-### 高级功能
+## 📦 项目结构
 
-- **消息反馈**: 点击消息下方的 👍 / 👌 按钮表达您对回复的喜好
-- **重新生成**: 点击 🔄 按钮让 AI 重新生成回复
+```
+components/
+├── ai-assistant/
+│   ├── entrance.tsx      # 可嵌入的对话面板
+│   └── hover-icon.tsx    # 悬浮图标
+└── chat/
+    ├── markdown-render.tsx     # 核心渲染器
+    └── markdown-extensions/    # 可扩展组件
+        ├── card-block.tsx      # 卡片
+        ├── echart-block.tsx    # 图表
+        ├── mermaid-diagram.tsx # 流程图
+        ├── latex-formula.tsx   # 公式
+        └── html-block.tsx      # HTML 沙箱
+```
 
-## 支持的 AI 服务 🤖
-
-### Mock（默认）
-模拟 AI 响应，用于测试和演示，无需配置 API Key。
-
-### OpenAI 兼容接口
-支持所有兼容 OpenAI API 格式的服务：
-- 阿里云 DashScope（通义千问）
-- OpenAI GPT 系列
-- 其他兼容 OpenAI 格式的 API
-
-### Ollama
-支持本地部署的 Ollama 服务，可运行各种开源模型。
-
-## 自定义主题 🎨
-
-修改 `app/globals.css` 中的 CSS 变量可以自定义主题颜色：
+## 🎨 自定义主题
 
 ```css
+/* app/globals.css */
 :root {
-  --primary: oklch(0.55 0.2 255);  /* 主色调 */
-  --background: oklch(1 0 0);      /* 背景色 */
-  --foreground: oklch(0.145 0 0);  /* 前景色 */
+  --primary: oklch(0.55 0.2 255);
 }
 ```
 
-## API 路由说明 🔌
+## 🚀 部署
 
-### POST /api/chat
+**Vercel**:
+1. Fork → Import → Deploy
+2. 配置环境变量
+3. 完成
 
-发送聊天请求的 API 端点。
-
-**请求参数**:
-```typescript
-{
-  messages: Array<{
-    role: 'user' | 'assistant'
-    content: string
-  }>,
-  stream: boolean
-}
-```
-
-**查询参数**:
-- `provider`: 指定 AI 服务提供者（mock | openai | ollama）
-
-**响应格式**: SSE (Server-Sent Events) 流式响应
-
-```
-event: delta
-data: {"content": "AI 回复的内容片段"}
-```
-
-## 注意事项 ⚠️
-
-- 默认使用 Mock 模式，无需 API Key 即可体验基本功能
-- 对接真实 AI 服务需要配置相应的环境变量
-- API Key 存储在 `.env.local` 文件中，不会被提交到 Git
-- 生产环境部署时，请通过平台的环境变量功能配置密钥
-
-## 部署 🚀
-
-### Vercel 部署
-
-1. Fork 本项目到您的 GitHub 账号
-2. 在 Vercel 导入项目
-3. 配置环境变量（OPENAI_API_KEY 等）
-4. 点击部署
-
-### Docker 部署
-
+**Docker**:
 ```bash
 docker build -t next-chat .
-docker run -p 3000:3000 -e OPENAI_API_KEY=your-key next-chat
+docker run -p 3000:3000 next-chat
 ```
 
-## 开发脚本 📜
+## 📜 开发脚本
 
 ```bash
-npm run dev      # 启动开发服务器
-npm run build    # 构建生产版本
-npm run start    # 启动生产服务器
-npm run lint     # 运行 ESLint 检查
+npm run dev    # 开发
+npm run build  # 构建
+npm run start  # 生产
+npm run lint   # 检查
 ```
 
-## 许可证 📄
+## ⚠️ 注意
 
-MIT License
+- Mock 模式支持全部功能演示，无需 API Key
+- API Key 存储在 `.env.local`，不会提交到 Git
+- 生产环境通过平台环境变量配置
 
-## 贡献 🤝
+## 📄 License
 
-欢迎提交 Issue 和 Pull Request！
+MIT
 
 ---
-
-**注意**: 本项目仅供学习参考使用。

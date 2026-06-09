@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useState } from 'react'
-import { Copy, Check, ThumbsUp, RefreshCw, ThumbsDown } from 'lucide-react'
+import { Copy, Check, ThumbsUp, RefreshCw, ThumbsDown, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -12,14 +12,20 @@ import { OPERATION_NAMES } from '@/lib/store/operation-slice'
 interface MessageActionsProps {
     message: ChatMessage
     isLastAssistant?: boolean
+    isUser?: boolean
 }
 
-export function MessageActions({ message, isLastAssistant = false }: MessageActionsProps) {
+export function MessageActions({ 
+    message, 
+    isLastAssistant = false, 
+    isUser = false
+}: MessageActionsProps) {
     const [copied, setCopied] = useState(false)
     
-    // 从全局操作注册表获取操作
-    const operationsMap = useChatStore((state) => state.operationsMap)
+    const editingMessageId = useChatStore((state) => state.editingMessageId)
+    const setEditingMessageId = useChatStore((state) => state.setEditingMessageId)
     
+    const isEditing = editingMessageId === message.id
     const activeChild = getActiveContent(message)
 
     const handleCopy = useCallback(() => {
@@ -31,21 +37,108 @@ export function MessageActions({ message, isLastAssistant = false }: MessageActi
     }, [activeChild.content])
 
     const handleLike = useCallback(() => {
-        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'like')
-    }, [message.id, operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'like')
+    }, [message.id])
 
     const handleDislike = useCallback(() => {
-        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'dislike')
-    }, [message.id, operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'dislike')
+    }, [message.id])
 
     const handleGenerate = useCallback(() => {
-        operationsMap[OPERATION_NAMES.REGENERATE]?.()
-    }, [operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.REGENERATE]?.()
+    }, [])
 
+    const handleEdit = useCallback(() => {
+        // 设置当前消息为编辑状态（自动取消其他消息的编辑状态）
+        setEditingMessageId(message.id)
+        // 同步原始内容到 store
+        const setEditContent = useChatStore.getState().setEditContent
+        setEditContent(activeChild.content ?? '')
+    }, [message.id, setEditingMessageId, activeChild.content])
+
+    const handleEditConfirm = useCallback(() => {
+        // 通过 store 获取编辑内容并触发编辑操作
+        const state = useChatStore.getState()
+        const newContent = state.editContent?.trim() || ''
+        const oldContent = activeChild.content?.trim() || ''
+        
+        // 如果内容没有变化，直接退出编辑模式
+        if (newContent === oldContent) {
+            setEditingMessageId(null)
+            return
+        }
+        
+        state.operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
+        setEditingMessageId(null)
+    }, [message.id, setEditingMessageId, activeChild.content])
+
+    const handleEditCancel = useCallback(() => {
+        setEditingMessageId(null)
+    }, [setEditingMessageId])
+
+    // 用户消息显示编辑和复制
+    if (isUser) {
+        return (
+            <div className={cn(
+                'flex items-center gap-1 mt-1 transition-opacity',
+                isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}>
+                {/* 非编辑状态：显示编辑和复制 */}
+                {!isEditing && (
+                    <>
+                        <Button
+                            onClick={handleEdit}
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                        >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                        </Button>
+                        <Button
+                            onClick={handleCopy}
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                        >
+                            {copied ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            ) : (
+                                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                            )}
+                        </Button>
+                    </>
+                )}
+
+                {/* 编辑状态：显示取消和确定 */}
+                {isEditing && (
+                    <>
+                        <Button
+                            onClick={handleEditCancel}
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                        >
+                            <X className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                        <Button
+                            onClick={handleEditConfirm}
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                        >
+                            <Check className="h-3.5 w-3.5 text-green-500" />
+                        </Button>
+                    </>
+                )}
+            </div>
+        )
+    }
+
+    // AI 消息显示复制、点赞、点踩和重新生成
     return (
-        <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* 复制 */}
-            <TooltipProvider>
+        <TooltipProvider>
+            <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* 复制 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -65,9 +158,7 @@ export function MessageActions({ message, isLastAssistant = false }: MessageActi
                         {copied ? '已复制' : '复制'}
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
-            {/* 点赞 */}
-            <TooltipProvider>
+                {/* 点赞 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -80,9 +171,7 @@ export function MessageActions({ message, isLastAssistant = false }: MessageActi
                         有帮助
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
-            {/* 点踩 */}
-            <TooltipProvider>
+                {/* 点踩 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -95,11 +184,9 @@ export function MessageActions({ message, isLastAssistant = false }: MessageActi
                         没帮助
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
 
-            {/* 重新生成，仅最后一条消息生效 */}
-            {isLastAssistant && (
-                <TooltipProvider>
+                {/* 重新生成，仅最后一条消息生效 */}
+                {isLastAssistant && (
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <span className="inline-flex">
@@ -112,8 +199,8 @@ export function MessageActions({ message, isLastAssistant = false }: MessageActi
                             重新生成
                         </TooltipContent>
                     </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
+                )}
+            </div>
+        </TooltipProvider>
     )
 }

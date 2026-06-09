@@ -47,6 +47,8 @@ export function useStreamContent({
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const onTypingCompleteRef = useRef(onTypingComplete)
     const isFirstRenderRef = useRef(true)
+    // 创建边界计算器实例（每个组件实例独立缓存）
+    const streamBufferCalculatorRef = useRef(createStreamBufferCalculator())
 
     const clearTimer = useCallback(() => {
         if (timerRef.current) {
@@ -101,7 +103,8 @@ export function useStreamContent({
                 // 已经显示到末尾了，等待新内容
                 return
             }
-            const buffers = getStreamBuffers(latestContent)
+            // 使用带缓存的边界计算器
+            const buffers = streamBufferCalculatorRef.current(latestContent)
             const nextBoundary = findNextBoundary(latestContent, currentIndexRef.current, buffers)
             currentIndexRef.current = nextBoundary
             setDisplayContent(latestContent.slice(0, nextBoundary))
@@ -119,7 +122,13 @@ export function useStreamContent({
             setIsTyping(false)
             onTypingCompleteRef.current?.()
         }
-    }, [isMessageEnd, clearTimer, onTypingCompleteRef])
+    }, [isMessageEnd, clearTimer])
+
+    // 组件卸载时确保清理定时器
+    useEffect(() => {
+        return clearTimer
+    }, [clearTimer])
+
     return {
         displayContent,
         isTyping
@@ -129,8 +138,61 @@ export function useStreamContent({
 
 /** 
  * 将内容按结构边界分割为缓冲块
+ * 使用闭包缓存已计算的边界，只对增量部分重算
  */
-function getStreamBuffers(content: string): number[] {
+function createStreamBufferCalculator() {
+    let cachedContent = ''
+    let cachedBoundaries: number[] = []
+
+    return function getStreamBuffers(content: string): number[] {
+        // 如果内容没有变化，直接返回缓存
+        if (content === cachedContent) {
+            return cachedBoundaries
+        }
+
+        // 如果内容变短（比如编辑），清空缓存重新计算
+        if (content.length < cachedContent.length) {
+            cachedContent = ''
+            cachedBoundaries = []
+        }
+
+        // 找到新内容的起始位置（从缓存内容之后开始）
+        const startIndex = cachedContent.length
+        
+        // 如果没有缓存，从头开始
+        if (startIndex === 0) {
+            cachedBoundaries = calculateBoundaries(content)
+            cachedContent = content
+            return cachedBoundaries
+        }
+
+        // 增量计算新内容的边界
+        const newContent = content.slice(startIndex)
+        const newBoundaries = calculateBoundaries(newContent)
+        
+        // 将新边界偏移到完整内容的位置
+        const offsetBoundaries = newBoundaries.map(b => b + startIndex)
+        
+        // 如果最后一个边界不是内容末尾，需要检查是否与前面的块合并
+        if (offsetBoundaries.length > 0 && offsetBoundaries[offsetBoundaries.length - 1] < content.length) {
+            cachedBoundaries = cachedBoundaries.concat(offsetBoundaries)
+        } else if (offsetBoundaries.length > 0) {
+            // 如果最后一个边界到达末尾，需要检查是否需要调整
+            const lastBoundary = cachedBoundaries[cachedBoundaries.length - 1]
+            if (lastBoundary < content.length) {
+                cachedBoundaries = cachedBoundaries.concat(offsetBoundaries)
+            }
+        }
+        
+        cachedContent = content
+        return cachedBoundaries
+    }
+}
+
+/**
+ * 实际计算边界的函数
+ */
+function calculateBoundaries(content: string): number[] {
     const boundaries: number[] = []
     let i = 0
 

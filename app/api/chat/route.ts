@@ -23,6 +23,9 @@ import {
     MOCK_ECHART_REPLAY,
     MOCK_HTML_THINKING,
     MOCK_HTML_REPLAY,
+    MOCK_APPLE_COUNT_THINKING,
+    MOCK_APPLE_COUNT_REPLY,
+    MOCK_CONFIRM_SUCCESS_REPLY,
 } from './mock-data'
 
 type ProviderType = 'mock' | 'openai' | 'ollama'
@@ -97,6 +100,13 @@ const MOCK_SCENARIOS: Array<{
     reply: string
     chunkSize: number
 }> = [
+        // 精确匹配的模式放在最前面，避免被更通用的模式抢先匹配
+        { 
+            pattern: /确认将今日苹果数量修改为3个/, 
+            thinking: '', 
+            reply: MOCK_CONFIRM_SUCCESS_REPLY,
+            chunkSize: 20
+        },
         { 
             pattern: /热量|饮食|卡路里/, 
             thinking: MOCK_CALORIE_THINKING, 
@@ -137,6 +147,13 @@ const MOCK_SCENARIOS: Array<{
             pattern: /html|交互动画|演示页面/, 
             thinking: MOCK_HTML_THINKING, 
             reply: MOCK_HTML_REPLAY,
+            chunkSize: 15
+        },
+        // 更通用的模式放在后面
+        { 
+            pattern: /苹果|吃了几个苹果/, 
+            thinking: MOCK_APPLE_COUNT_THINKING, 
+            reply: MOCK_APPLE_COUNT_REPLY,
             chunkSize: 15
         },
     ]

@@ -5,7 +5,7 @@ import { Upload, X, FileText, FileImage, FileAudio, FileVideo, File } from 'luci
 import { cn } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { Progress } from '../ui/progress'
-import type { UploadingFile } from '@/lib/store/types'
+import type { FileItem, UploadingFile } from '@/lib/store/types'
 
 interface FileCardProps {
     file: UploadingFile
@@ -229,5 +229,121 @@ export function Attachments({
                 </div>
             )}
         </div>
+    )
+}
+
+/** 消息列表中的文件附件组件 */
+export function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
+    if (!files || files.length === 0) return null
+
+    const getFileIcon = (mimeType?: string) => {
+        const iconClass = 'w-5 h-5'
+        if (!mimeType) return <File className={iconClass} />
+        if (mimeType.startsWith('image/')) return <FileImage className={iconClass} />
+        if (mimeType.startsWith('audio/')) return <FileAudio className={iconClass} />
+        if (mimeType.startsWith('video/')) return <FileVideo className={iconClass} />
+
+        return <FileText className={iconClass} />
+    }
+
+    const formatFileSize = (size?: number) => {
+        if (!size) return '-'
+        if (size < 1024) return `${size} B`
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`
+        return `${(size / (1024 * 1024)).toFixed(2)} MB`
+    }
+
+    const getFileExtension = (name: string) => {
+        const extensionIndex = name.lastIndexOf('.')
+        if (extensionIndex === -1) return ''
+        return name.slice(extensionIndex + 1).toLowerCase()
+    }
+
+    const isImageFile = (mimeType?: string) => {
+        return mimeType?.startsWith('image/')
+    }
+
+    // 预览图片状态
+    const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+    return (
+        <>
+            <div className="space-y-2">
+                {files.map(file => (
+                    <div
+                        key={file.uid}
+                        className={cn(
+                            'group flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer',
+                            isUser ? 'bg-background hover:bg-muted/50' : 'bg-muted hover:bg-muted/80'
+                        )}
+                        onClick={() => {
+                            if (isImageFile(file.mimeType) && file.url) {
+                                setPreviewImage(file.url)
+                            }
+                        }}
+                    >
+                        {isImageFile(file.mimeType) && file.url ? (
+                            // 图片类型：只显示可点击预览的缩略图
+                            <div className="relative rounded-lg overflow-hidden w-36 h-36 flex-shrink-0">
+                                <img
+                                    src={file.url}
+                                    alt={file.name}
+                                    className="w-full h-full object-cover"
+                                />
+                                {/* 点击提示图标 */}
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        ) : (
+                            // 非图片类型：使用截图排版结构
+                            <>
+                                {/* 文件图标 */}
+                                <div className={cn(
+                                    'flex-shrink-0 rounded-xl flex items-center justify-center w-20 h-20',
+                                    'bg-muted'
+                                )}>
+                                    <span className="text-muted-foreground flex items-center justify-center">
+                                        {getFileIcon(file.mimeType)}
+                                    </span>
+                                </div>
+                                {/* 文件信息 */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm leading-tight truncate">{file.name}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        {getFileExtension(file.name)} {formatFileSize(file.size)}
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* 图片预览弹窗 */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <button
+                        className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                        onClick={() => setPreviewImage(null)}
+                    >
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <img
+                        src={previewImage}
+                        alt="预览"
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
+        </>
     )
 }

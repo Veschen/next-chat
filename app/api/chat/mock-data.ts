@@ -373,6 +373,54 @@ const MOCK_CALORIE_REPLY =
     '\n```\n\n' +
     '---\n\n以上是根据你的饮食记录计算出的摄入热量分析报告，有任何问题，请随时问我。\n\n'
 
+const MOCK_APPLE_COUNT_THINKING = '让我查看你的苹果食用记录...'
+
+const MOCK_APPLE_COUNT_REPLY =
+    '## 苹果食用记录\n\n' +
+    '```card\n' +
+    '{\n' +
+    '  "title": "今日苹果食用记录",\n' +
+    '  "badge": {\n' +
+    '    "text": "待确认",\n' +
+    '    "variant": "outline"\n' +
+    '  },\n' +
+    '  "sections": [\n' +
+    '    {\n' +
+    '      "title": "当前记录",\n' +
+    '      "items": [\n' +
+    '        {\n' +
+    '          "label": "今日已食用苹果数量",\n' +
+    '          "detail": "2个",\n' +
+    '          "status": "default"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "title": "操作",\n' +
+    '      "content": "是否将今日苹果食用数量修改为3个？"\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "footer": {\n' +
+    '    "buttons": [\n' +
+    '      {\n' +
+    '        "text": "确认修改",\n' +
+    '        "variant": "default",\n' +
+    '        "actionType": "confirm",\n' +
+    '        "actionValue": "确认将今日苹果数量修改为3个"\n' +
+    '      },\n' +
+    '      {\n' +
+    '        "text": "取消",\n' +
+    '        "variant": "outline",\n' +
+    '        "actionType": "cancel",\n' +
+    '        "actionValue": "取消修改苹果数量"\n' +
+    '      }\n' +
+    '    ]\n' +
+    '  }\n' +
+    '}\n' +
+    '```\n\n'
+
+const MOCK_CONFIRM_SUCCESS_REPLY = '✅ 执行成功！今日苹果食用数量已更新为3个。'
+
 const MOCK_REPLY = [
     '你好！我是一个智能助手。\n\n' +
     '我可以帮你完成以下任务：\n\n' +
@@ -411,4 +459,7 @@ export {
     MOCK_ECHART_REPLAY,
     MOCK_HTML_THINKING,
     MOCK_HTML_REPLAY,
+    MOCK_APPLE_COUNT_THINKING,
+    MOCK_APPLE_COUNT_REPLY,
+    MOCK_CONFIRM_SUCCESS_REPLY,
 }

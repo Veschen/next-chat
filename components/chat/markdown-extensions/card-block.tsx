@@ -37,6 +37,18 @@ interface ButtonData {
     text: string
     variant?: "destructive" | "default" | "secondary" | "outline" | "ghost" | "link"
     action?: string
+    /** 按钮动作类型 */
+    actionType?: 'confirm' | 'submit' | 'navigate'
+    /** 动作值，配合 actionType 使用 */
+    actionValue?: string
+}
+
+interface CardBlockProps {
+    content: string
+    /** 发送消息回调 */
+    onSendMessage?: (message: string) => void
+    /** 是否启用按钮（仅最新消息显示按钮） */
+    enabled?: boolean
 }
 
 /**
@@ -67,7 +79,7 @@ function parseCardData(data: string): CardBlockData | null {
 /**
  * 自定义卡片块组件
  */
-export function CardBlock({ content }: { content: string }) {
+export function CardBlock({ content, onSendMessage, enabled = true }: CardBlockProps) {
     const lastValidRef = useRef<CardBlockData | null>(null)
 
     const parsed = parseCardData(content)
@@ -104,6 +116,40 @@ export function CardBlock({ content }: { content: string }) {
     }
 
     const cardData = lastValidRef.current
+
+    /**
+     * 处理按钮点击
+     */
+    const handleButtonClick = (button: ButtonData) => {
+        if (!onSendMessage) return
+
+        // 根据 actionType 执行不同的动作
+        switch (button.actionType) {
+            case 'confirm':
+                // 确认类型：发送确认消息，包含 actionValue
+                if (button.actionValue) {
+                    onSendMessage(button.actionValue)
+                } else {
+                    onSendMessage(`确认: ${button.text}`)
+                }
+                break
+            case 'submit':
+                // 提交类型：发送提交消息
+                if (button.actionValue) {
+                    onSendMessage(button.actionValue)
+                } else {
+                    onSendMessage(`提交: ${button.text}`)
+                }
+                break
+            case 'navigate':
+                // 导航类型：发送导航消息
+                onSendMessage(`导航到: ${button.actionValue || button.text}`)
+                break
+            default:
+                // 默认：发送按钮文本作为消息
+                onSendMessage(button.action || button.text)
+        }
+    }
 
     return (
         <Card className="gap-0 my-4 w-full max-w-sm not-prose text-sm text-wrap">
@@ -200,13 +246,19 @@ export function CardBlock({ content }: { content: string }) {
                 }
             </CardContent>
 
-            {/* 底部按钮 */}
+            {/* 底部按钮 - 仅在 enabled 为 true 时显示 */}
             {
-                cardData.footer && cardData.footer.buttons && cardData.footer.buttons.length > 0 && (
+                enabled && cardData.footer && cardData.footer.buttons && cardData.footer.buttons.length > 0 && (
                     <CardFooter className="px-4 py-3 gap-2">
                         {
                             cardData.footer.buttons.map((button, index) => (
-                                <Button key={`${button.text}+${index}`} variant={button.variant || 'default'} size="sm" className="flex-1 text-xs">
+                                <Button
+                                    key={`${button.text}+${index}`}
+                                    variant={button.variant || 'default'}
+                                    size="sm"
+                                    className="flex-1 text-xs"
+                                    onClick={() => handleButtonClick(button)}
+                                >
                                     {button.text}
                                 </Button>
                             ))

@@ -8,13 +8,14 @@ import { Input } from '../ui/input'
 import { ScrollArea } from '../ui/scroll-area'
 import type { Conversation } from '@/lib/store/types'
 
-interface ConversationListProps {
+export interface ConversationListProps {
     conversations: Conversation[]
-    activeId?: string | null
+    activeId: string |null| undefined
     onSelect: (id: string) => void
     onCreate: () => void
     onDelete: (id: string) => void
     onRename: (id: string, title: string) => void
+    hideHeader?: boolean
 }
 
 interface ConversationItemProps {
@@ -168,17 +169,19 @@ function ConversationItem({
     )
 }
 
-export function ConversationList({ conversations, activeId, onSelect, onCreate, onDelete, onRename }: ConversationListProps) {
+export function ConversationList({ conversations, activeId, onSelect, onCreate, onDelete, onRename, hideHeader = false }: ConversationListProps) {
     const groups = useMemo(() => groupByTime(conversations), [conversations])
     return (
         <div className="flex flex-col h-full bg-secondary/50">
             {/* 头部 */}
-            <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-sm font-semibold">会话列表</h2>
-                <Button size="icon" variant="ghost" onClick={onCreate} className="h-8 w-8">
-                    <Plus className="w-4 h-4" />
-                </Button>
-            </div>
+            {!hideHeader && (
+                <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="text-sm font-semibold">会话列表</h2>
+                    <Button size="icon" variant="ghost" onClick={onCreate} className="h-8 w-8">
+                        <Plus className="w-4 h-4" />
+                    </Button>
+                </div>
+            )}
             {/* 列表 */}
             <ScrollArea className="flex-1 P-2">
                 {
