@@ -19,6 +19,8 @@ export const OPERATION_NAMES = {
     QUESTION_SELECT: 'questionSelect',
     /** 选择建议 */
     SUGGESTION_SELECT: 'suggestionSelect',
+    /** 编辑消息并重新发送 */
+    EDIT_MESSAGE: 'editMessage',
 } as const
 
 export const createOperationSlice: StateCreator<

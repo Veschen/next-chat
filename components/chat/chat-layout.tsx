@@ -38,6 +38,7 @@ export function ChatLayout() {
     const setMessageFeedback = useChatStore((state) => state.setMessageFeedback)
     const regenerateLastMessage = useChatStore((state) => state.regenerateLastMessage)
     const switchMessageVersion = useChatStore((state) => state.switchMessageVersion)
+    const editMessage = useChatStore((state) => state.editMessage)
     
     // 文件上传相关
     const pendingFiles = useChatStore((state) => state.pendingFiles)
@@ -59,6 +60,7 @@ export function ChatLayout() {
         setMessageFeedback,
         regenerateLastMessage,
         switchMessageVersion,
+        editMessage,
         requestOptions,
     })
     
@@ -68,6 +70,7 @@ export function ChatLayout() {
         setMessageFeedback,
         regenerateLastMessage,
         switchMessageVersion,
+        editMessage,
         requestOptions,
     }
 
@@ -83,6 +86,14 @@ export function ChatLayout() {
             regenerateLastMessage(requestOptions)
         }
 
+        const handleEditMessage = (messageId: string, newContent: string) => {
+            const { editMessage, sendMessage, requestOptions } = operationsRef.current
+            // 编辑消息，删除该消息之后的所有消息
+            editMessage(messageId, newContent)
+            // 自动重新发送
+            sendMessage(newContent, requestOptions)
+        }
+
         registerOperations({
             [OPERATION_NAMES.SEND_MESSAGE]: handleSend,
             [OPERATION_NAMES.REGENERATE]: handleGenerate,
@@ -94,6 +105,7 @@ export function ChatLayout() {
             },
             [OPERATION_NAMES.QUESTION_SELECT]: handleSend,
             [OPERATION_NAMES.SUGGESTION_SELECT]: handleSend,
+            [OPERATION_NAMES.EDIT_MESSAGE]: handleEditMessage,
         })
 
         return () => {

@@ -111,12 +111,18 @@ export interface FileSlice {
     getReadyFiles: () => FileItem[]
 }
 
-/** 消息管理 slice状态 + 操作函数 */
+/** 消息管理 slice 状态 + 操作函数 */
 export interface MessageSlice {
     /** 设置消息反馈 */
     setMessageFeedback: (id: string, feedback: 'like' | 'dislike' | null) => void
     /** 切换消息的展示版本 */
     switchMessageVersion: (id: string, direction: 'prev' | 'next') => void
+    /** 编辑用户消息，删除该消息之后的所有消息 */
+    editMessage: (messageId: string, newContent: string) => number
+    /** 设置正在编辑的消息 ID */
+    setEditingMessageId: (messageId: string | null) => void
+    /** 获取当前正在编辑的消息 ID */
+    getEditingMessageId: () => string | null
 }
 
 /** 流式请求管理 slice状态 + 操作函数 */
@@ -150,5 +156,8 @@ export interface OperationSlice {
     clearOperations: () => void
 }
 
-/** 完整的ChatStore 类型 = Slice聚合 */
-export type ChatStore = ConversationSlice & MessageSlice & StreamSlice & FileSlice & OperationSlice
+/** 完整的 ChatStore 类型 = Slice 聚合 + 全局状态 */
+export type ChatStore = ConversationSlice & MessageSlice & StreamSlice & FileSlice & OperationSlice & {
+    /** 当前正在编辑的消息 ID */
+    editingMessageId?: string | null
+}

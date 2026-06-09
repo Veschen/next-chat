@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { User, Bot, Loader2, ChevronDown, ChevronRight, ChevronLeft, Brain, FileText, FileImage, FileAudio, FileVideo, File } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { MarkdownRender } from './markdown-render'
 import type { ChatMessage, FileItem } from '@/lib/store/types'
-import { MessageActions } from './message-actions'
 import { getActiveContent } from '@/lib/store/utils'
 import { useChatStore } from '@/lib/store'
 import { OPERATION_NAMES } from '@/lib/store/operation-slice'
+import { MessageActions } from './message-actions'
 
 /** 文件附件组件 */
 function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
@@ -103,11 +103,8 @@ function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?
 
 /** 思考过程折叠面板 */
 function ThinkingBlock({ thinking, isThinking, thinkingDuration }: { thinking: string, isThinking: boolean, thinkingDuration?: number }) {
-    // 思考完成后自动折叠，思考中时展开
-    // 使用本地状态允许用户手动切换，但思考中强制展开
     const [isOpen, setIsOpen] = useState(isThinking)
     
-    // 思考中时强制展开
     useEffect(() => {
         if (isThinking) {
             setIsOpen(true)
@@ -193,6 +190,57 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
     const activeChild = getActiveContent(message)
     const hasThinking = !isUser && !!activeChild.thinking
 
+    // 使用全局 store 管理编辑状态
+    const editingMessageId = useChatStore((state) => state.editingMessageId)
+    const setEditingMessageId = useChatStore((state) => state.setEditingMessageId)
+    const isEditing = editingMessageId === message.id
+    const [editContent, setEditContent] = useState(activeChild.content)
+    const [originalContent, setOriginalContent] = useState(activeChild.content)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+    // 当进入编辑模式时，同步内容并聚焦光标
+    useEffect(() => {
+        if (isEditing) {
+            const content = activeChild.content ?? ''
+            setEditContent(content)
+            setOriginalContent(content)
+            // 延迟聚焦，确保 DOM 已更新
+            setTimeout(() => {
+                const textarea = textareaRef.current
+                if (textarea) {
+                    textarea.focus()
+                    // 将光标定位到文本末尾
+                    textarea.setSelectionRange(content.length, content.length)
+                }
+            }, 0)
+        }
+    }, [isEditing, activeChild.content])
+
+    // 编辑确认处理（检查内容是否变化）
+    const handleEditConfirm = () => {
+        const newContent = editContent.trim()
+        const oldContent = originalContent.trim()
+        
+        // 如果内容没有变化，直接退出编辑模式
+        if (newContent === oldContent) {
+            setEditingMessageId(null)
+            return
+        }
+
+        // 内容有变化，触发编辑操作
+        if (newContent) {
+            const operationsMap = useChatStore.getState().operationsMap
+            operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
+        }
+        setEditingMessageId(null)
+    }
+
+    // 编辑取消处理
+    const handleEditCancel = () => {
+        setEditingMessageId(null)
+        setEditContent('')
+    }
+
     return (
         <div
             className={cn('flex group gap-3 px-4 py-3',
@@ -210,16 +258,33 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
             <div className={cn('flex flex-col max-w-[65%]', isUser ? 'items-end' : 'items-start')}>
                 <div
                     className={cn('rounded-2xl px-4 py-2.5',
-                        isUser ? 'bg-primary text-primary-foreground rounded-tr-md' : 'bg-muted rounded-tl-md')}
+                        isUser 
+                            ? 'bg-primary text-primary-foreground rounded-tr-md' 
+                            : 'bg-muted rounded-tl-md'
+                    )}
                 >
                     {
                         isUser ? (
                             <>
-                                <p className="text-sm leading-7 whitespace-pre-wrap">
-                                    {activeChild.content}
-                                </p>
+                                {isEditing ? (
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={editContent}
+                                        onChange={(e) => setEditContent(e.target.value)}
+                                        className={cn(
+                                            'w-full bg-transparent border-none outline-none resize-none',
+                                            'text-sm leading-7 whitespace-pre-wrap',
+                                            'text-primary-foreground'
+                                        )}
+                                        style={{ minHeight: '48px' }}
+                                    />
+                                ) : (
+                                    <p className="text-sm leading-7 whitespace-pre-wrap">
+                                        {activeChild.content}
+                                    </p>
+                                )}
                                 {/* 用户消息中的附件 */}
-                                <FileAttachments files={activeChild.fileList ?? []} isUser={isUser} />
+                                {!isEditing && <FileAttachments files={activeChild.fileList ?? []} isUser={isUser} />}
                             </>
                         ) : activeChild.loading && !activeChild.content && !hasThinking ? (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
@@ -244,16 +309,24 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                         )
                     }
                 </div>
-                {/* 多版本切换器 */}
+
+                {/* 消息操作（统一使用 MessageActions） */}
+                {activeChild.content && (
+                    <MessageActions
+                        message={message}
+                        isLastAssistant={isLastAssistant}
+                        isUser={isUser}
+                        isEditing={isEditing}
+                        editContent={editContent}
+                        onEditChange={setEditingMessageId}
+                        onEditContentChange={setEditContent}
+                        onEditConfirm={handleEditConfirm}
+                        onEditCancel={handleEditCancel}
+                    />
+                )}
+
+                {/* AI 消息的多版本切换器 */}
                 {!isUser && <VersionSwitcher message={message} disabled={isStreaming} />}
-                {
-                    !isUser && activeChild.content && (
-                        <MessageActions
-                            message={message}
-                            isLastAssistant={isLastAssistant}
-                        />
-                    )
-                }
             </div>
         </div>
     )
