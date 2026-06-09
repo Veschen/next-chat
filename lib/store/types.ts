@@ -125,6 +125,8 @@ export interface MessageSlice {
     getEditingMessageId: () => string | null
     /** 设置编辑内容 */
     setEditContent: (content: string) => void
+    /** 获取当前正在编辑的消息索引位置 */
+    getEditingMessageIndex: () => number
 }
 
 /** 流式请求管理 slice状态 + 操作函数 */

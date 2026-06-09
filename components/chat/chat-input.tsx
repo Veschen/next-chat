@@ -45,9 +45,29 @@ export function ChatInput({
     const isComposingRef = useRef(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // 从全局操作注册表获取操作
-    const operationsMap = useChatStore((state) => state.operationsMap)
-    
+    // 使用 ref 存储高频变化的依赖，避免 useCallback 频繁重建
+    const valueRef = useRef(value)
+    const hasFilesRef = useRef(pendingFiles.length > 0)
+    const isStreamingRef = useRef(isStreaming)
+    const disabledRef = useRef(disabled)
+
+    // 同步 ref 值
+    useEffect(() => {
+        valueRef.current = value
+    }, [value])
+
+    useEffect(() => {
+        hasFilesRef.current = pendingFiles.length > 0
+    }, [pendingFiles])
+
+    useEffect(() => {
+        isStreamingRef.current = isStreaming
+    }, [isStreaming])
+
+    useEffect(() => {
+        disabledRef.current = disabled
+    }, [disabled])
+
     const hasFiles = pendingFiles.length > 0
 
     const filteredShortcuts = useMemo(() => {
@@ -72,13 +92,19 @@ export function ChatInput({
     }, [])
 
     const handleSend = useCallback(() => {
-        const trimmedValue = value.trim()
-        if (!trimmedValue && !hasFiles) return
-        if (isStreaming || disabled) return
+        const trimmedValue = valueRef.current.trim()
+        const currentHasFiles = hasFilesRef.current
+        const currentIsStreaming = isStreamingRef.current
+        const currentDisabled = disabledRef.current
 
-        const readyFiles = hasFiles ? getReadyFiles() : undefined
-        const sendContent = trimmedValue || (hasFiles ? '请分析以下文件' : '')
-        operationsMap[OPERATION_NAMES.SEND_MESSAGE]?.(sendContent, readyFiles)
+        if (!trimmedValue && !currentHasFiles) return
+        if (currentIsStreaming || currentDisabled) return
+
+        const readyFiles = currentHasFiles ? getReadyFiles() : undefined
+        const sendContent = trimmedValue || (currentHasFiles ? '请分析以下文件' : '')
+        
+        // 使用 getState() 获取最新的 operationsMap，避免订阅导致的重渲染
+        useChatStore.getState().operationsMap[OPERATION_NAMES.SEND_MESSAGE]?.(sendContent, readyFiles)
 
         setValue('')
         setShortcutOpen(false)
@@ -88,7 +114,7 @@ export function ChatInput({
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto'
         }
-    }, [isStreaming, operationsMap, value, disabled, hasFiles, getReadyFiles, onClearFiles])
+    }, [getReadyFiles, onClearFiles])
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (shortcutOpen && filteredShortcuts.length > 0) {

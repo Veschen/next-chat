@@ -11,8 +11,8 @@ import { generateId, getActiveContent } from "./utils"
 
 type ImmerSet = Parameters<StateCreator<ChatStore, [['zustand/immer', never], ['zustand/devtools', never]], [], StreamSlice>>[0]
 
-/**模块级变量：当前正在处理的流式请求实例 */
-let currentStreamRequest: ReturnType<typeof CRequest> | null = null
+/**模块级变量：当前正在处理的流式请求实例，按 conversationId 隔离 */
+const currentStreamRequests = new Map<string, ReturnType<typeof CRequest>>()
 
 function jsonSafeParse<T = Record<string, any>>(raw: string, fallback: T): T {
     try {
@@ -172,11 +172,11 @@ function startStreamRequest(
     targetMessageId: string,
     requestOptions: CRequestOptions,
 ) {
-    // 如果有进行中的流式请求，先取消
-    currentStreamRequest?.abort()
+    // 如果该会话有进行中的流式请求，先取消
+    currentStreamRequests.get(conversationId)?.abort()
 
     const request = CRequest(requestOptions)
-    currentStreamRequest = request
+    currentStreamRequests.set(conversationId, request)
 
     // 将AbortController存储到store中
     const callbacks = createStreamCallBacks(set, conversationId, targetMessageId)
@@ -208,14 +208,6 @@ export const createStreamSlice: StateCreator<
                 conversationId = state.createConversation()
             }
 
-            const userMessage: ChatMessage = {
-                id: generateId(),
-                role: 'user',
-                children: [{ content, msgType: 'text', fileList }],
-                currentIndex: 0,
-                timestamp: Date.now(),
-            }
-
             const assistantMessage: ChatMessage = {
                 id: generateId(),
                 role: 'assistant',
@@ -224,16 +216,36 @@ export const createStreamSlice: StateCreator<
                 timestamp: Date.now(),
             }
 
-            // 添加用户消息 + 占位AI消息
+            // 获取当前是否处于编辑模式
+            const editingIndex = state.getEditingMessageIndex()
+
             // Immer 写法：直接修改状态
             set((state) => {
                 const conversation = state.conversations.find(c => c.id === conversationId)
                 if (!conversation) return
-                // 用首条用户消息作为会话标题
-                if (conversation.messages.length === 0) {
-                    conversation.title = content.slice(0, 20) + (content.length > 20 ? '...' : '')
+
+                if (editingIndex >= 0) {
+                    // 编辑模式：不添加新用户消息，直接添加 assistant 消息
+                    // 编辑消息时，editMessage 已经更新了用户消息内容并删除了后续消息
+                    // 所以当前最后一条消息就是被编辑的用户消息
+                    conversation.messages.push(assistantMessage)
+                    // 重置编辑状态
+                    state.editingMessageIndex = -1
+                } else {
+                    // 正常模式：添加用户消息 + 占位AI消息
+                    const userMessage: ChatMessage = {
+                        id: generateId(),
+                        role: 'user',
+                        children: [{ content, msgType: 'text', fileList }],
+                        currentIndex: 0,
+                        timestamp: Date.now(),
+                    }
+                    // 用首条用户消息作为会话标题
+                    if (conversation.messages.length === 0) {
+                        conversation.title = content.slice(0, 20) + (content.length > 20 ? '...' : '')
+                    }
+                    conversation.messages.push(userMessage, assistantMessage)
                 }
-                conversation.messages.push(userMessage, assistantMessage)
                 state.isStreaming = true
             }, false, 'stream/sendMessage')
 
@@ -250,8 +262,12 @@ export const createStreamSlice: StateCreator<
         },
 
         abortStream: () => {
-            currentStreamRequest?.abort()
-            currentStreamRequest = null
+            const state = get()
+            const conversationId = state.activeConversationId
+            if (conversationId) {
+                currentStreamRequests.get(conversationId)?.abort()
+                currentStreamRequests.delete(conversationId)
+            }
             set((state) => {
                 state.isStreaming = false
             }, false, 'stream/abortStream')

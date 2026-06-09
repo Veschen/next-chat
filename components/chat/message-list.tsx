@@ -114,8 +114,15 @@ export function MessageList({
     // 如果服务端和客户端渲染不同结构会导致 hydration mismatch
     const hasMessages = isHydrated ? messages.length > 0 : false
 
-    // 找到最后一条消息的id
-    const lastAssistantId = [...messages].reverse().find((msg) => msg.role === 'assistant')?.id
+    // 找到最后一条 assistant 消息的 id，用 useMemo 缓存避免每次渲染重建数组
+    const lastAssistantId = useMemo(() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant') {
+                return messages[i].id
+            }
+        }
+        return undefined
+    }, [messages])
 
     return (
         <ScrollArea className="flex-1 min-h-0 overflow-hidden">

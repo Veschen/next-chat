@@ -24,7 +24,6 @@ export function MessageActions({
     
     const editingMessageId = useChatStore((state) => state.editingMessageId)
     const setEditingMessageId = useChatStore((state) => state.setEditingMessageId)
-    const operationsMap = useChatStore((state) => state.operationsMap)
     
     const isEditing = editingMessageId === message.id
     const activeChild = getActiveContent(message)
@@ -38,16 +37,16 @@ export function MessageActions({
     }, [activeChild.content])
 
     const handleLike = useCallback(() => {
-        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'like')
-    }, [message.id, operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'like')
+    }, [message.id])
 
     const handleDislike = useCallback(() => {
-        operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'dislike')
-    }, [message.id, operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.FEEDBACK]?.(message.id, 'dislike')
+    }, [message.id])
 
     const handleGenerate = useCallback(() => {
-        operationsMap[OPERATION_NAMES.REGENERATE]?.()
-    }, [operationsMap])
+        useChatStore.getState().operationsMap[OPERATION_NAMES.REGENERATE]?.()
+    }, [])
 
     const handleEdit = useCallback(() => {
         // 设置当前消息为编辑状态（自动取消其他消息的编辑状态）
@@ -69,8 +68,7 @@ export function MessageActions({
             return
         }
         
-        const operationsMap = state.operationsMap
-        operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
+        state.operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
         setEditingMessageId(null)
     }, [message.id, setEditingMessageId, activeChild.content])
 
@@ -138,9 +136,9 @@ export function MessageActions({
 
     // AI 消息显示复制、点赞、点踩和重新生成
     return (
-        <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* 复制 */}
-            <TooltipProvider>
+        <TooltipProvider>
+            <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* 复制 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -160,9 +158,7 @@ export function MessageActions({
                         {copied ? '已复制' : '复制'}
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
-            {/* 点赞 */}
-            <TooltipProvider>
+                {/* 点赞 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -175,9 +171,7 @@ export function MessageActions({
                         有帮助
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
-            {/* 点踩 */}
-            <TooltipProvider>
+                {/* 点踩 */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="inline-flex">
@@ -190,11 +184,9 @@ export function MessageActions({
                         没帮助
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
 
-            {/* 重新生成，仅最后一条消息生效 */}
-            {isLastAssistant && (
-                <TooltipProvider>
+                {/* 重新生成，仅最后一条消息生效 */}
+                {isLastAssistant && (
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <span className="inline-flex">
@@ -207,8 +199,8 @@ export function MessageActions({
                             重新生成
                         </TooltipContent>
                     </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
+                )}
+            </div>
+        </TooltipProvider>
     )
 }

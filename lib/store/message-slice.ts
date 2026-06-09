@@ -13,6 +13,7 @@ export const createMessageSlice: StateCreator<
 >
     = (set, get) => ({
         editingMessageId: null,
+        editingMessageIndex: -1,
         editContent: '',
         setMessageFeedback: (id: string, feedback: 'like' | 'dislike' | null) => {
             set((state) => {
@@ -70,6 +71,8 @@ export const createMessageSlice: StateCreator<
                             c.title = newContent.slice(0, 20) + (newContent.length > 20 ? '...' : '')
                         }
                         messageIndex = messageIndexInConv
+                        // 保存编辑消息的索引位置
+                        state.editingMessageIndex = messageIndexInConv
                         break
                     }
                 }
@@ -97,5 +100,11 @@ export const createMessageSlice: StateCreator<
             set((state) => {
                 state.editContent = content
             }, false, 'message/setEditContent')
+        },
+        /**
+         * 获取当前正在编辑的消息索引位置
+         */
+        getEditingMessageIndex: () => {
+            return get().editingMessageIndex ?? -1
         },
     })
