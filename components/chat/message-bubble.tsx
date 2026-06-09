@@ -18,6 +18,8 @@ interface MessageBubbleProps {
     message: ChatMessage
     isLastAssistant?: boolean
     isStreaming?: boolean
+    /** 是否紧凑模式 */
+    compact?: boolean
 }
 
 
@@ -100,7 +102,7 @@ function VersionSwitcher({ message, disabled }: { message: ChatMessage, disabled
     )
 }
 
-export function MessageBubble({ message, isLastAssistant = false, isStreaming = false }: MessageBubbleProps) {
+export function MessageBubble({ message, isLastAssistant = false, isStreaming = false, compact = false }: MessageBubbleProps) {
     const isUser = message.role === 'user'
     const activeChild = getActiveContent(message)
     const hasThinking = !isUser && !!activeChild.thinking
@@ -152,13 +154,17 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                 </AvatarFallback>
             </Avatar>
             {/* 消息内容 */}
-            <div className={cn('flex flex-col max-w-[65%]', isUser ? 'items-end' : 'items-start', isEditing && 'w-[65%]')}>
+            <div className={cn('flex flex-col min-w-0', 
+                compact && !isUser ? 'max-w-[90%]' : 'max-w-[70%]',
+                isUser ? 'items-end' : 'items-start', 
+                isEditing && (compact ? 'w-[90%]' : 'w-[70%]')
+            )}>
                 {/* 用户消息中的附件 - 移到气泡上方 */}
                 {isUser && activeChild.fileList && activeChild.fileList.length > 0 && (
                     <FileAttachments files={activeChild.fileList} isUser={isUser} />
                 )}
                 <div
-                    className={cn('rounded-2xl px-4 py-2.5',
+                    className={cn('rounded-2xl px-4 py-2.5 overflow-hidden max-w-full', 
                         isUser
                             ? 'bg-primary text-primary-foreground rounded-tr-md'
                             : 'bg-muted rounded-tl-md',

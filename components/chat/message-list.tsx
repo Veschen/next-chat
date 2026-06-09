@@ -24,6 +24,63 @@ interface MessageListProps {
     suggestions?: SuggestionItem[]
     /** 建议展示模式 */
     suggestionMode?: 'default' | 'dropdown'
+    /** 是否紧凑模式 */
+    compact?: boolean
+}
+
+interface ScrollAreaWrapperProps {
+    /** 是否紧凑模式 */
+    compact?: boolean
+    /** 滚动视口元素 */
+    viewportRef: React.RefObject<HTMLDivElement | null>
+    /** 检测滚动能力函数 */
+    checkScroll: (el: HTMLDivElement) => void
+    /** 子元素 */
+    children: React.ReactNode
+}
+
+
+/**
+ * 滚动区域包装器
+ * 紧凑模式使用原生div(避免 display: table 撑宽小屏幕气泡的问题)
+ * 非紧凑模式使用Radix ScrollArea
+ */
+function ScrollAreaWrapper({ compact, viewportRef, checkScroll, children }: ScrollAreaWrapperProps) {
+    if (compact) {
+        return (
+            <div className="flex flex-1 flex-col min-h-0 relative">
+                <div
+                    className="flex-1 min-h-0 overflow-y-auto"
+                    ref={(node) => {
+                        // 获取 radix ScrollArea 内部的 viewport 节点
+                        if (node && node !== viewportRef.current) {
+                            viewportRef.current = node
+                            checkScroll(node)
+                        }
+                    }}
+                >
+                    {children}
+                </div>
+            </div>
+
+        )
+    }
+    return (
+        <ScrollArea className="flex-1 min-h-0 overflow-hidden">
+            <div ref={(node) => {
+                // 获取 radix ScrollArea 内部的 viewport 节点
+                if (node) {
+                    const viewport = node.closest('[data-slot="scroll-area-viewport"]') as HTMLDivElement | null
+                    if (viewport && viewport !== viewportRef.current) {
+                        viewportRef.current = viewport
+                        checkScroll(viewport)
+                    }
+                }
+            }}>
+                {children}
+            </div>
+        </ScrollArea>
+    )
 }
 
 export function MessageList({
@@ -32,6 +89,7 @@ export function MessageList({
     welcomeQuestions = [],
     suggestions = [],
     suggestionMode = 'default',
+    compact = false,
 }: MessageListProps) {
     // 从全局操作注册表获取操作
     const operationsMap = useChatStore((state) => state.operationsMap)
@@ -125,17 +183,8 @@ export function MessageList({
     }, [messages])
 
     return (
-        <ScrollArea className="flex-1 min-h-0 overflow-hidden">
-            <div ref={(node) => {
-                // 获取 radix ScrollArea 内部的 viewport 节点
-                if (node) {
-                    const viewport = node.closest('[data-slot="scroll-area-viewport"]') as HTMLDivElement | null
-                    if (viewport && viewport !== viewportRef.current) {
-                        viewportRef.current = viewport
-                        checkScroll(viewport)
-                    }
-                }
-            }} className="max-w-3xl mx-auto py-4 min-h-full">
+        <ScrollAreaWrapper compact={compact} viewportRef={viewportRef} checkScroll={checkScroll}>
+            <div className="max-w-3xl mx-auto py-4 min-h-full">
                 {!hasMessages ? (
                     // 空状态 - 欢迎页面
                     <div className="flex flex-col items-center justify-center text-muted-foreground gap-6 p-8 min-h-full">
@@ -175,6 +224,7 @@ export function MessageList({
                                 message={message}
                                 isLastAssistant={message.id === lastAssistantId}
                                 isStreaming={isStreaming}
+                                compact={compact}
                             />
                         ))}
                         {showSuggestions && (
@@ -217,6 +267,6 @@ export function MessageList({
                     )}
                 </div>
             )}
-        </ScrollArea>
+        </ScrollAreaWrapper>
     )
 }

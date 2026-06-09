@@ -179,7 +179,7 @@ function CodeBlock({
                     {copied ? '已复制' : '复制'}
                 </button>
             </div>
-            <pre className="!mt-0 !rounded-t-none bg-zinc-800">
+            <pre className="!mt-0 !rounded-t-none bg-zinc-800 overflow-x-auto whitespace-pre-wrap break-all">
                 <code className={className} {...props}>
                     {children}
                 </code>

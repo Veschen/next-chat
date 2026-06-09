@@ -349,6 +349,7 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
                         welcomeQuestions={WELCOME_QUESTIONS}
                         suggestions={DEFAULT_SUGGESTIONS}
                         suggestionMode="dropdown"
+                        compact
                     />
                 )}
 
