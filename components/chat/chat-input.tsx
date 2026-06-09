@@ -232,7 +232,7 @@ export function ChatInput({
                                 files={pendingFiles}
                                 onAddFiles={onAddFiles}
                                 onRemoveFile={onRemoveFile}
-                                accept="image/*,.pdf,.doc,.docx,.txt"
+                                accept="image/*,.pdf,.doc,.docx,.txt,.md"
                                 maxCount={5}
                                 disabled={isStreaming}
                             />
@@ -269,7 +269,7 @@ export function ChatInput({
                             ref={fileInputRef}
                             type="file"
                             multiple
-                            accept="image/*,.pdf,.doc,.docx,.txt"
+                            accept="image/*,.pdf,.doc,.docx,.txt,.md"
                             className="hidden"
                             onChange={handleFileChange}
                             disabled={disabled || isStreaming}
