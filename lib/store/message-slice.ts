@@ -12,6 +12,8 @@ export const createMessageSlice: StateCreator<
     MessageSlice
 >
     = (set, get) => ({
+        editingMessageId: null,
+        editContent: '',
         setMessageFeedback: (id: string, feedback: 'like' | 'dislike' | null) => {
             set((state) => {
                 for (const c of state.conversations) {
@@ -87,5 +89,13 @@ export const createMessageSlice: StateCreator<
          */
         getEditingMessageId: () => {
             return get().editingMessageId ?? null
+        },
+        /**
+         * 设置编辑内容
+         */
+        setEditContent: (content: string) => {
+            set((state) => {
+                state.editContent = content
+            }, false, 'message/setEditContent')
         },
     })

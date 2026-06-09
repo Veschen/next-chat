@@ -123,6 +123,8 @@ export interface MessageSlice {
     setEditingMessageId: (messageId: string | null) => void
     /** 获取当前正在编辑的消息 ID */
     getEditingMessageId: () => string | null
+    /** 设置编辑内容 */
+    setEditContent: (content: string) => void
 }
 
 /** 流式请求管理 slice状态 + 操作函数 */
@@ -160,4 +162,6 @@ export interface OperationSlice {
 export type ChatStore = ConversationSlice & MessageSlice & StreamSlice & FileSlice & OperationSlice & {
     /** 当前正在编辑的消息 ID */
     editingMessageId?: string | null
+    /** 当前编辑的内容 */
+    editContent?: string
 }

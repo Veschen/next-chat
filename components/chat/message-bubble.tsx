@@ -13,6 +13,12 @@ import { useChatStore } from '@/lib/store'
 import { OPERATION_NAMES } from '@/lib/store/operation-slice'
 import { MessageActions } from './message-actions'
 
+interface MessageBubbleProps {
+    message: ChatMessage
+    isLastAssistant?: boolean
+    isStreaming?: boolean
+}
+
 /** 文件附件组件 */
 function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
     if (!files || files.length === 0) return null
@@ -83,7 +89,7 @@ function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?
                     </div>
 
                     {/* hover 展示完整文件名 */}
-                    { file.name.length > 20 &&
+                    {file.name.length > 20 &&
                         <div className={cn(
                             'absolute -bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-md z-10',
                             'bg-gray-900 text-white text-xs whitespace-nowrap',
@@ -104,7 +110,7 @@ function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?
 /** 思考过程折叠面板 */
 function ThinkingBlock({ thinking, isThinking, thinkingDuration }: { thinking: string, isThinking: boolean, thinkingDuration?: number }) {
     const [isOpen, setIsOpen] = useState(isThinking)
-    
+
     useEffect(() => {
         if (isThinking) {
             setIsOpen(true)
@@ -144,16 +150,16 @@ function ThinkingBlock({ thinking, isThinking, thinkingDuration }: { thinking: s
 /** 多版本切换器 */
 function VersionSwitcher({ message, disabled }: { message: ChatMessage, disabled: boolean }) {
     const operationsMap = useChatStore((state) => state.operationsMap)
-    
+
     const totalVersions = message.children?.length ?? 0
     if (totalVersions <= 1) return null
 
     const currentIndex = message.currentIndex
-    
+
     const handleSwitch = (direction: 'prev' | 'next') => {
         operationsMap[OPERATION_NAMES.SWITCH_VERSION]?.(message.id, direction)
     }
-    
+
     return (
         <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
             <Button
@@ -179,12 +185,6 @@ function VersionSwitcher({ message, disabled }: { message: ChatMessage, disabled
     )
 }
 
-interface MessageBubbleProps {
-    message: ChatMessage
-    isLastAssistant?: boolean
-    isStreaming?: boolean
-}
-
 export function MessageBubble({ message, isLastAssistant = false, isStreaming = false }: MessageBubbleProps) {
     const isUser = message.role === 'user'
     const activeChild = getActiveContent(message)
@@ -192,10 +192,9 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
 
     // 使用全局 store 管理编辑状态
     const editingMessageId = useChatStore((state) => state.editingMessageId)
-    const setEditingMessageId = useChatStore((state) => state.setEditingMessageId)
+    const setEditContent = useChatStore((state) => state.setEditContent)
+    const editContent = useChatStore((state) => state.editContent)
     const isEditing = editingMessageId === message.id
-    const [editContent, setEditContent] = useState(activeChild.content)
-    const [originalContent, setOriginalContent] = useState(activeChild.content)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     // 当进入编辑模式时，同步内容并聚焦光标
@@ -203,7 +202,6 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
         if (isEditing) {
             const content = activeChild.content ?? ''
             setEditContent(content)
-            setOriginalContent(content)
             // 延迟聚焦，确保 DOM 已更新
             setTimeout(() => {
                 const textarea = textareaRef.current
@@ -214,32 +212,7 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                 }
             }, 0)
         }
-    }, [isEditing, activeChild.content])
-
-    // 编辑确认处理（检查内容是否变化）
-    const handleEditConfirm = () => {
-        const newContent = editContent.trim()
-        const oldContent = originalContent.trim()
-        
-        // 如果内容没有变化，直接退出编辑模式
-        if (newContent === oldContent) {
-            setEditingMessageId(null)
-            return
-        }
-
-        // 内容有变化，触发编辑操作
-        if (newContent) {
-            const operationsMap = useChatStore.getState().operationsMap
-            operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
-        }
-        setEditingMessageId(null)
-    }
-
-    // 编辑取消处理
-    const handleEditCancel = () => {
-        setEditingMessageId(null)
-        setEditContent('')
-    }
+    }, [isEditing, activeChild.content, setEditContent])
 
     return (
         <div
@@ -255,12 +228,13 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                 </AvatarFallback>
             </Avatar>
             {/* 消息内容 */}
-            <div className={cn('flex flex-col max-w-[65%]', isUser ? 'items-end' : 'items-start')}>
+            <div className={cn('flex flex-col max-w-[65%]', isUser ? 'items-end' : 'items-start', isEditing && 'w-[65%]')}>
                 <div
                     className={cn('rounded-2xl px-4 py-2.5',
-                        isUser 
-                            ? 'bg-primary text-primary-foreground rounded-tr-md' 
-                            : 'bg-muted rounded-tl-md'
+                        isUser
+                            ? 'bg-primary text-primary-foreground rounded-tr-md'
+                            : 'bg-muted rounded-tl-md',
+                            isEditing && 'w-full'
                     )}
                 >
                     {
@@ -295,9 +269,9 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                             <>
                                 {
                                     hasThinking && (
-                                        <ThinkingBlock 
-                                            thinking={activeChild.thinking!} 
-                                            isThinking={!!activeChild.isThinking} 
+                                        <ThinkingBlock
+                                            thinking={activeChild.thinking!}
+                                            isThinking={!!activeChild.isThinking}
                                             thinkingDuration={activeChild.thinkingDuration}
                                         />
                                     )
@@ -316,12 +290,6 @@ export function MessageBubble({ message, isLastAssistant = false, isStreaming = 
                         message={message}
                         isLastAssistant={isLastAssistant}
                         isUser={isUser}
-                        isEditing={isEditing}
-                        editContent={editContent}
-                        onEditChange={setEditingMessageId}
-                        onEditContentChange={setEditContent}
-                        onEditConfirm={handleEditConfirm}
-                        onEditCancel={handleEditCancel}
                     />
                 )}
 

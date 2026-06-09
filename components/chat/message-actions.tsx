@@ -13,29 +13,20 @@ interface MessageActionsProps {
     message: ChatMessage
     isLastAssistant?: boolean
     isUser?: boolean
-    isEditing?: boolean
-    editContent?: string
-    onEditChange?: (messageId: string | null) => void
-    onEditContentChange?: (content: string) => void
-    onEditConfirm?: () => void
-    onEditCancel?: () => void
 }
 
 export function MessageActions({ 
     message, 
     isLastAssistant = false, 
-    isUser = false,
-    isEditing = false,
-    editContent = '',
-    onEditChange,
-    onEditContentChange,
-    onEditConfirm,
-    onEditCancel
+    isUser = false
 }: MessageActionsProps) {
     const [copied, setCopied] = useState(false)
     
+    const editingMessageId = useChatStore((state) => state.editingMessageId)
+    const setEditingMessageId = useChatStore((state) => state.setEditingMessageId)
     const operationsMap = useChatStore((state) => state.operationsMap)
     
+    const isEditing = editingMessageId === message.id
     const activeChild = getActiveContent(message)
 
     const handleCopy = useCallback(() => {
@@ -60,17 +51,32 @@ export function MessageActions({
 
     const handleEdit = useCallback(() => {
         // 设置当前消息为编辑状态（自动取消其他消息的编辑状态）
-        onEditChange?.(message.id)
-    }, [message.id, onEditChange])
+        setEditingMessageId(message.id)
+        // 同步原始内容到 store
+        const setEditContent = useChatStore.getState().setEditContent
+        setEditContent(activeChild.content ?? '')
+    }, [message.id, setEditingMessageId, activeChild.content])
 
     const handleEditConfirm = useCallback(() => {
-        // 调用父组件的确认处理（已包含内容变化检查）
-        onEditConfirm?.()
-    }, [onEditConfirm])
+        // 通过 store 获取编辑内容并触发编辑操作
+        const state = useChatStore.getState()
+        const newContent = state.editContent?.trim() || ''
+        const oldContent = activeChild.content?.trim() || ''
+        
+        // 如果内容没有变化，直接退出编辑模式
+        if (newContent === oldContent) {
+            setEditingMessageId(null)
+            return
+        }
+        
+        const operationsMap = state.operationsMap
+        operationsMap[OPERATION_NAMES.EDIT_MESSAGE]?.(message.id, newContent)
+        setEditingMessageId(null)
+    }, [message.id, setEditingMessageId, activeChild.content])
 
     const handleEditCancel = useCallback(() => {
-        onEditCancel?.()
-    }, [onEditCancel])
+        setEditingMessageId(null)
+    }, [setEditingMessageId])
 
     // 用户消息显示编辑和复制
     if (isUser) {
