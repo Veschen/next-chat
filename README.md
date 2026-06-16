@@ -10,7 +10,7 @@
 
 Next Chat 是一套AI 生成界面(AI-Generated UI)的开发框架。
 
-不同于传统的聊天界面，Next Chat 的核心能力是：**让大模型通过 Markdown 语法直接生成可交互的用户界面**。你只需要告诉 AI "用卡片展示订单详情"，它就能渲染出一个带标签页、按钮、数据的卡片组件。
+不同于传统的聊天界面，Next Chat 的核心能力是：**让大模型通过 Markdown 语法直接生成可交互的用户界面**。接入支持Markdown扩展语法的服务端后，你只需要告诉 AI "用卡片展示订单详情"，它就能渲染出一个带标签页、按钮、数据的卡片组件。
 
 ## ✨ 核心价值
 
@@ -18,7 +18,7 @@ Next Chat 是一套AI 生成界面(AI-Generated UI)的开发框架。
 
 大模型返回的内容不是纯文本，而是**可交互的界面组件**：
 数据结构参考如下：
-
+```typescript
 ```card
 {
   "title": "订单 #12345",
@@ -32,6 +32,7 @@ Next Chat 是一套AI 生成界面(AI-Generated UI)的开发框架。
     ]
   }
 }
+```
 ```
 
 **支持的 AI 生成组件**：
@@ -84,7 +85,6 @@ npm run dev
 
 ```tsx
 import { Entrance } from '@/components/ai-assistant/entrance'
-import { HoverIcon } from '@/components/ai-assistant/hover-icon'
 
 // 嵌入到任意页面
 <Entrance
@@ -117,9 +117,9 @@ import { HoverIcon } from '@/components/ai-assistant/hover-icon'
 ┌─────────────────────────────────────────────────────────┐
 │                      你的页面                             │
 │  ┌─────────────────────────────────────────────────┐     │
-│  │  Entrance / HoverIcon  ← 可复用组件             │     │
+│  │              Entrance   ← 可复用组件             │     │
 │  │  ┌───────────────────────────────────────────┐ │     │
-│  │  │           对话界面                        │ │     │
+│  │  │            对话界面                        │ │     │
 │  │  │  ┌─────────────────────────────────────┐  │ │     │
 │  │  │  │    MarkdownRender                   │  │ │     │
 │  │  │  │  ┌─────────────────────────────┐    │  │ │     │

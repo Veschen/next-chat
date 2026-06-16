@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.0",
+    "@types/marked": "^5.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "echarts": "^6.1.0",
@@ -17,6 +18,7 @@
     "jsonrepair": "^3.14.0",
     "katex": "^0.17.0",
     "lucide-react": "^1.17.0",
+    "marked": "^18.0.5",
     "mermaid": "^11.15.0",
     "next": "^16.2.7",
     "radix-ui": "^1.4.3",
