@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import React, { Component, ErrorInfo, ReactNode } from "react"
 
 interface ComponentErrorBoundaryProps {
     children: ReactNode
@@ -13,7 +13,10 @@ interface ComponentErrorBoundaryState {
     error: Error | null
 }
 
-export class ComponentErrorBoundary extends Component<ComponentErrorBoundaryProps, ComponentErrorBoundaryState> {
+export class ComponentErrorBoundary extends Component<
+    ComponentErrorBoundaryProps,
+    ComponentErrorBoundaryState
+> {
     constructor(props: ComponentErrorBoundaryProps) {
         super(props)
         this.state = { hasError: false, error: null }

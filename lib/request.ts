@@ -8,9 +8,9 @@
  *    5. 支持超时配置
  */
 
-import { CFetch } from './fetch'
-import { SStream } from './stream'
-import type { SSEOutput, AsyncReadableStream } from './stream'
+import { CFetch } from "./fetch"
+import { SStream } from "./stream"
+import type { SSEOutput, AsyncReadableStream } from "./stream"
 
 /**
  *  流式请求客户端选项
@@ -46,7 +46,7 @@ export interface CRequestParams {
     [key: string]: any
 }
 
-/** 
+/**
  * 生命周期回调
  */
 export interface CRequestCallbacks<Output = SSEOutput> {
@@ -85,7 +85,6 @@ class CRequestClass {
     private isTimeout = false
     private isStreamTimeout = false
 
-
     constructor(options: CRequestOptions) {
         this.baseURL = options.baseURL
         this.model = options.model
@@ -118,11 +117,11 @@ class CRequestClass {
 
         // 构建请求头，支持断点续传
         const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json"
         }
         // SSE 的eventID 可能为 "0" 或者是 ""
         if (this.lastEventId !== undefined) {
-            headers['Last-Event-ID'] = this.lastEventId
+            headers["Last-Event-ID"] = this.lastEventId
         }
 
         // 通知外部拿到abortController，方便手动取消请求
@@ -132,7 +131,7 @@ class CRequestClass {
         if (this.timeout && this.timeout > 0) {
             this.timeoutTimer = setTimeout(() => {
                 this.isTimeout = true
-                callbacks?.onError?.(new Error('请求超时'))
+                callbacks?.onError?.(new Error("请求超时"))
                 this.abortController?.abort()
             }, this.timeout)
         }
@@ -140,23 +139,23 @@ class CRequestClass {
         try {
             const response = await CFetch(this.baseURL, {
                 fetch: this.customFetch,
-                method: 'POST',
+                method: "POST",
                 headers,
                 body: JSON.stringify({ model: this.model, ...params }),
-                signal: this.abortController?.signal,
+                signal: this.abortController?.signal
             })
 
             // 请求已返回，清除请求级超时
-            this.clearTimer('timeout')
+            this.clearTimer("timeout")
             // 这里因为可能会存在竞态条件（setTimeout回调和fetch响应同时触发），所以需要判断是否超时
-            if (this.isTimeout) return;
+            if (this.isTimeout) return
 
             // 根据 Content-Type 路由处理
-            const contentType = response.headers.get('Content-Type') || ''
-            const mediaType = contentType.split(';')[0].trim()
-            if (transformStream || mediaType === 'text/event-stream') {
+            const contentType = response.headers.get("Content-Type") || ""
+            const mediaType = contentType.split(";")[0].trim()
+            if (transformStream || mediaType === "text/event-stream") {
                 await this.handleStreamResponse<Output>(response, callbacks, transformStream)
-            } else if (mediaType === 'application/json') {
+            } else if (mediaType === "application/json") {
                 await this.handleJsonResponse<Output>(response, callbacks)
             } else {
                 throw new Error(`不支持的 Content-Type: ${contentType}`)
@@ -165,15 +164,15 @@ class CRequestClass {
             // 请求成功，重置重试状态
             this.resetRetry()
         } catch (error) {
-            this.clearTimer('timeout')
+            this.clearTimer("timeout")
 
             // 如果是流超时或者请求超时触发的，onError 已在定时器中触发，这里无需重复触发，且无需重试请求
             if (this.isStreamTimeout || this.isTimeout) return
 
-            const err = error instanceof Error ? error : new Error('未知错误')
+            const err = error instanceof Error ? error : new Error("未知错误")
 
             // AbortError 说明请求被手动取消，无需重复触发
-            if (err.name === 'AbortError') {
+            if (err.name === "AbortError") {
                 callbacks?.onError?.(err)
                 return
             }
@@ -191,10 +190,7 @@ class CRequestClass {
         callbacks?: CRequestCallbacks<Output>,
         transformStream?: TransformStream<string, Output>
     ): Promise<void> {
-        const stream: AsyncReadableStream<Output> = SStream<Output>(
-            response.body!,
-            transformStream,
-        )
+        const stream: AsyncReadableStream<Output> = SStream<Output>(response.body!, transformStream)
         const chunks: Output[] = []
         const iterator = (stream as any)[Symbol.asyncIterator]()
 
@@ -204,12 +200,12 @@ class CRequestClass {
             if (this.streamTimeout && this.streamTimeout > 0) {
                 this.streamTimeoutTimer = setTimeout(() => {
                     this.isStreamTimeout = true
-                    callbacks?.onError?.(new Error('流超时'), response.headers)
+                    callbacks?.onError?.(new Error("流超时"), response.headers)
                     this.abortController?.abort()
                 }, this.streamTimeout)
             }
             result = await iterator.next()
-            this.clearTimer('streamTimeout')
+            this.clearTimer("streamTimeout")
             // 这里也可能会存在竞态条件，所以需要判断是否超时
             if (this.isStreamTimeout) break
 
@@ -234,15 +230,15 @@ class CRequestClass {
     /** JSON 响应处理 */
     private async handleJsonResponse<Output = SSEOutput>(
         response: Response,
-        callbacks?: CRequestCallbacks<Output>,
+        callbacks?: CRequestCallbacks<Output>
     ): Promise<void> {
         const data: Output = await response.json()
 
         // 业务层错误判断
         const asAny = data as any
         if (asAny?.success === false) {
-            const error = new Error(asAny?.message || '系统错误')
-            error.name = asAny?.name || 'SystemError'
+            const error = new Error(asAny?.message || "系统错误")
+            error.name = asAny?.name || "SystemError"
             callbacks?.onError?.(error, response.headers)
             return
         }
@@ -270,16 +266,16 @@ class CRequestClass {
     }
 
     private resetRetry() {
-        this.clearTimer('retry')
+        this.clearTimer("retry")
         this.retryCount = 0
         this.lastEventId = undefined
     }
 
-    private clearTimer(type: 'timeout' | 'streamTimeout' | 'retry') {
+    private clearTimer(type: "timeout" | "streamTimeout" | "retry") {
         const timerMap = {
-            timeout: 'timeoutTimer',
-            streamTimeout: 'streamTimeoutTimer',
-            retry: 'retryTimer',
+            timeout: "timeoutTimer",
+            streamTimeout: "streamTimeoutTimer",
+            retry: "retryTimer"
         } as const
         const key = timerMap[type]
         if (this[key]) {
@@ -288,9 +284,9 @@ class CRequestClass {
         }
     }
     private clearALLTimers() {
-        this.clearTimer('timeout')
-        this.clearTimer('streamTimeout')
-        this.clearTimer('retry')
+        this.clearTimer("timeout")
+        this.clearTimer("streamTimeout")
+        this.clearTimer("retry")
     }
 }
 

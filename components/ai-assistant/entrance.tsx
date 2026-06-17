@@ -1,26 +1,31 @@
-'use client'
+"use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { X, Bot, MessageSquare, History, Plus, ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { useChatStore } from '@/lib/store'
-import { useHydration } from '@/lib/hooks/use-hydration'
-import { MessageList } from '@/components/chat/message-list'
-import { ChatInput } from '@/components/chat/chat-input'
-import { ConversationList } from '@/components/chat/conversation-list'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { X, Bot, MessageSquare, History, Plus, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { useChatStore } from "@/lib/store"
+import { useHydration } from "@/lib/hooks/use-hydration"
+import { MessageList } from "@/components/chat/message-list"
+import { ChatInput } from "@/components/chat/chat-input"
+import { ConversationList } from "@/components/chat/conversation-list"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { PROVIDER_OPTIONS } from '@/lib/constants'
-import { OPERATION_NAMES } from '@/lib/store/operation-slice'
-import type { FileItem } from '@/lib/store/types'
-import type { QuestionItem } from '@/lib/types'
-import type { CRequestOptions } from '@/lib/request'
-import { WELCOME_QUESTIONS, DEFAULT_SUGGESTIONS, REQUEST_OPTIONS, MOCK_SHORTCUTS } from '@/lib/constants'
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { PROVIDER_OPTIONS } from "@/lib/constants"
+import { OPERATION_NAMES } from "@/lib/store/operation-slice"
+import type { FileItem } from "@/lib/store/types"
+import type { QuestionItem } from "@/lib/types"
+import type { CRequestOptions } from "@/lib/request"
+import {
+    WELCOME_QUESTIONS,
+    DEFAULT_SUGGESTIONS,
+    REQUEST_OPTIONS,
+    MOCK_SHORTCUTS
+} from "@/lib/constants"
 
 export interface AgentPreset {
     name: string
@@ -42,7 +47,7 @@ interface EntranceProps {
 export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: EntranceProps) {
     const isHydrated = useHydration()
     const [showHistory, setShowHistory] = useState(false)
-    
+
     // 从全局 store 获取状态
     const conversations = useChatStore((state) => state.conversations)
     const activeConversationId = useChatStore((state) => state.activeConversationId)
@@ -60,7 +65,7 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
     const regenerateLastMessage = useChatStore((state) => state.regenerateLastMessage)
     const switchMessageVersion = useChatStore((state) => state.switchMessageVersion)
     const editMessage = useChatStore((state) => state.editMessage)
-    
+
     // 文件上传相关
     const pendingFiles = useChatStore((state) => state.pendingFiles)
     const addFiles = useChatStore((state) => state.addFiles)
@@ -76,10 +81,13 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
     const messages = currentConversation?.messages ?? []
 
     // 根据 provider 动态生成 requestOptions
-    const requestOptions: CRequestOptions = useMemo(() => ({
-        ...REQUEST_OPTIONS,
-        baseURL: `/api/chat?provider=${provider}`,
-    }), [provider])
+    const requestOptions: CRequestOptions = useMemo(
+        () => ({
+            ...REQUEST_OPTIONS,
+            baseURL: `/api/chat?provider=${provider}`
+        }),
+        [provider]
+    )
 
     // 使用 ref 存储最新的回调函数，避免频繁重注册
     const operationsRef = useRef({
@@ -88,9 +96,9 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
         regenerateLastMessage,
         switchMessageVersion,
         editMessage,
-        requestOptions,
+        requestOptions
     })
-    
+
     // 每次渲染时更新 ref
     operationsRef.current = {
         sendMessage,
@@ -98,7 +106,7 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
         regenerateLastMessage,
         switchMessageVersion,
         editMessage,
-        requestOptions,
+        requestOptions
     }
 
     // 注册全局操作
@@ -122,15 +130,15 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
         registerOperations({
             [OPERATION_NAMES.SEND_MESSAGE]: handleSend,
             [OPERATION_NAMES.REGENERATE]: handleGenerate,
-            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: 'like' | 'dislike' | null) => {
+            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: "like" | "dislike" | null) => {
                 operationsRef.current.setMessageFeedback(id, feedback)
             },
-            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: 'prev' | 'next') => {
+            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: "prev" | "next") => {
                 operationsRef.current.switchMessageVersion(id, direction)
             },
             [OPERATION_NAMES.QUESTION_SELECT]: handleSend,
             [OPERATION_NAMES.SUGGESTION_SELECT]: handleSend,
-            [OPERATION_NAMES.EDIT_MESSAGE]: handleEditMessage,
+            [OPERATION_NAMES.EDIT_MESSAGE]: handleEditMessage
         })
 
         return () => {
@@ -165,11 +173,13 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
     // 显示历史记录
     if (showHistory) {
         return (
-            <div className={cn(
-                'fixed bottom-20 right-6 w-96 h-[600px] rounded-2xl shadow-2xl border bg-background',
-                'flex flex-col overflow-hidden transition-all duration-300',
-                !isHydrated && 'opacity-0'
-            )}>
+            <div
+                className={cn(
+                    "fixed bottom-20 right-6 w-96 h-[600px] rounded-2xl shadow-2xl border bg-background",
+                    "flex flex-col overflow-hidden transition-all duration-300",
+                    !isHydrated && "opacity-0"
+                )}
+            >
                 {/* 顶部标题栏 */}
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
                     <div className="flex items-center gap-2">
@@ -226,11 +236,13 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
     }
 
     return (
-        <div className={cn(
-            'fixed bottom-20 right-6 w-96 h-[600px] rounded-2xl shadow-2xl border bg-background',
-            'flex flex-col overflow-hidden transition-all duration-300',
-            !isHydrated && 'opacity-0'
-        )}>
+        <div
+            className={cn(
+                "fixed bottom-20 right-6 w-96 h-[600px] rounded-2xl shadow-2xl border bg-background",
+                "flex flex-col overflow-hidden transition-all duration-300",
+                !isHydrated && "opacity-0"
+            )}
+        >
             {/* 顶部标题栏 */}
             <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
                 <div className="flex items-center gap-2">
@@ -241,12 +253,9 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
                     {/* Provider 切换下拉菜单 */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs gap-1"
-                            >
-                                {PROVIDER_OPTIONS.find(p => p.value === provider)?.label || 'Mock'}
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
+                                {PROVIDER_OPTIONS.find((p) => p.value === provider)?.label ||
+                                    "Mock"}
                                 <ChevronDown className="w-3 h-3" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -285,17 +294,22 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
                         }}
                         title="新建对话"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                            />
                         </svg>
                     </Button>
                     {/* 关闭按钮 */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={onClose}
-                    >
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
                         <X className="w-4 h-4" />
                     </Button>
                 </div>
@@ -312,7 +326,7 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
                             </div>
                             <h2 className="text-lg font-semibold mb-2">您好！我是您的 AI 助手</h2>
                             <p className="text-sm text-muted-foreground">
-                                {agentPresets[0]?.description || '有什么可以帮您的吗？'}
+                                {agentPresets[0]?.description || "有什么可以帮您的吗？"}
                             </p>
                         </div>
 
@@ -329,8 +343,8 @@ export function Entrance({ visible, onClose, agentPresets = [], onNewChat }: Ent
                                             key={index}
                                             onClick={() => handleQuestionSelect(question)}
                                             className={cn(
-                                                'w-full text-left p-3 rounded-lg border bg-card hover:bg-accent/50',
-                                                'transition-colors text-sm'
+                                                "w-full text-left p-3 rounded-lg border bg-card hover:bg-accent/50",
+                                                "transition-colors text-sm"
                                             )}
                                         >
                                             <span className="mr-2">{question.icon}</span>

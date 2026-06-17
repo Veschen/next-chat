@@ -6,14 +6,14 @@ import type { CRequestOptions } from "../request"
 
 /** 流式事件类型 */
 export type SSEEventType =
-    | 'message' // 正常文本输出
-    | 'thinking' // 思考过程（reasoning token）
-    | 'error' // 服务端错误
-    | 'done' // 流结束信号
+    | "message" // 正常文本输出
+    | "thinking" // 思考过程（reasoning token）
+    | "error" // 服务端错误
+    | "done" // 流结束信号
 
 export type SSEEventHandler = (data: Record<string, any>) => void
 
-export type MessageType = 'text' | 'image' | 'markdown' | 'file'
+export type MessageType = "text" | "image" | "markdown" | "file"
 
 /** 附件 文件 */
 export interface FileItem {
@@ -42,18 +42,17 @@ export interface MessageContent {
     thinkingDuration?: number
 }
 
-
 /** 消息类型 */
 export interface ChatMessage {
     id: string
-    role: 'user' | 'assistant'
+    role: "user" | "assistant"
     /** 多版本消息内容列表 */
     children: MessageContent[]
     /** 当前展示的子消息索引 */
     currentIndex: number
     /** 消息创建时间 */
     timestamp: number
-    feedback?: 'like' | 'dislike' | null
+    feedback?: "like" | "dislike" | null
 }
 
 /** 会话类型 */
@@ -87,7 +86,7 @@ export interface UploadingFile {
     name: string
     size?: number
     mimeType?: string
-    status?: 'uploading' | 'done' | 'failed'
+    status?: "uploading" | "done" | "failed"
     progress?: number
     /** 预览图片URL, 仅对图片文件有效 */
     previewUrl?: string
@@ -114,9 +113,9 @@ export interface FileSlice {
 /** 消息管理 slice 状态 + 操作函数 */
 export interface MessageSlice {
     /** 设置消息反馈 */
-    setMessageFeedback: (id: string, feedback: 'like' | 'dislike' | null) => void
+    setMessageFeedback: (id: string, feedback: "like" | "dislike" | null) => void
     /** 切换消息的展示版本 */
-    switchMessageVersion: (id: string, direction: 'prev' | 'next') => void
+    switchMessageVersion: (id: string, direction: "prev" | "next") => void
     /** 编辑用户消息，删除该消息之后的所有消息 */
     editMessage: (messageId: string, newContent: string) => number
     /** 设置正在编辑的消息 ID */
@@ -161,15 +160,19 @@ export interface OperationSlice {
 }
 
 /** 完整的 ChatStore 类型 = Slice 聚合 + 全局状态 */
-export type ChatStore = ConversationSlice & MessageSlice & StreamSlice & FileSlice & OperationSlice & {
-    /** 当前正在编辑的消息 ID */
-    editingMessageId?: string | null
-    /** 当前编辑的内容 */
-    editContent?: string
-    /** 当前正在编辑的消息索引位置 */
-    editingMessageIndex?: number
-    /** 当前选择的 provider */
-    provider: string
-    /** 设置 provider */
-    setProvider: (provider: string) => void
-}
+export type ChatStore = ConversationSlice &
+    MessageSlice &
+    StreamSlice &
+    FileSlice &
+    OperationSlice & {
+        /** 当前正在编辑的消息 ID */
+        editingMessageId?: string | null
+        /** 当前编辑的内容 */
+        editContent?: string
+        /** 当前正在编辑的消息索引位置 */
+        editingMessageIndex?: number
+        /** 当前选择的 provider */
+        provider: string
+        /** 设置 provider */
+        setProvider: (provider: string) => void
+    }

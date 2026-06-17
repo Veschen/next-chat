@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import React, { useRef } from 'react'
-import { jsonrepair } from 'jsonrepair'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { CheckCircle2, HelpCircle } from 'lucide-react'
+import React, { useRef } from "react"
+import { jsonrepair } from "jsonrepair"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { CheckCircle2, HelpCircle } from "lucide-react"
 
 /**
  * 卡片块数据结构
@@ -14,8 +14,11 @@ import { CheckCircle2, HelpCircle } from 'lucide-react'
  */
 interface CardBlockData {
     title: string
-    badge?: { text: string, variant?: "destructive" | "default" | "secondary" | "outline" | "ghost" | "link" }
-    tabs?: { label: string, value: string, content: string }[]
+    badge?: {
+        text: string
+        variant?: "destructive" | "default" | "secondary" | "outline" | "ghost" | "link"
+    }
+    tabs?: { label: string; value: string; content: string }[]
     sections?: SectionData[]
     footer?: { buttons: ButtonData[] }
 }
@@ -29,7 +32,7 @@ interface SectionData {
 interface ItemData {
     label: string
     detail?: string
-    status?: 'success' | 'warning' | 'info' | 'default'
+    status?: "success" | "warning" | "info" | "default"
     highlight?: string
 }
 
@@ -38,7 +41,7 @@ interface ButtonData {
     variant?: "destructive" | "default" | "secondary" | "outline" | "ghost" | "link"
     action?: string
     /** 按钮动作类型 */
-    actionType?: 'confirm' | 'submit' | 'navigate'
+    actionType?: "confirm" | "submit" | "navigate"
     /** 动作值，配合 actionType 使用 */
     actionValue?: string
 }
@@ -59,7 +62,7 @@ function formatJsonData(str: string) {
     if (trailingBackticks) {
         return str.slice(0, -trailingBackticks[0].length)
     }
-    if (str.endsWith('/')) {
+    if (str.endsWith("/")) {
         return `${str}"`
     }
     return str
@@ -125,7 +128,7 @@ export function CardBlock({ content, onSendMessage, enabled = true }: CardBlockP
 
         // 根据 actionType 执行不同的动作
         switch (button.actionType) {
-            case 'confirm':
+            case "confirm":
                 // 确认类型：发送确认消息，包含 actionValue
                 if (button.actionValue) {
                     onSendMessage(button.actionValue)
@@ -133,7 +136,7 @@ export function CardBlock({ content, onSendMessage, enabled = true }: CardBlockP
                     onSendMessage(`确认: ${button.text}`)
                 }
                 break
-            case 'submit':
+            case "submit":
                 // 提交类型：发送提交消息
                 if (button.actionValue) {
                     onSendMessage(button.actionValue)
@@ -141,7 +144,7 @@ export function CardBlock({ content, onSendMessage, enabled = true }: CardBlockP
                     onSendMessage(`提交: ${button.text}`)
                 }
                 break
-            case 'navigate':
+            case "navigate":
                 // 导航类型：发送导航消息
                 onSendMessage(`导航到: ${button.actionValue || button.text}`)
                 break
@@ -157,115 +160,117 @@ export function CardBlock({ content, onSendMessage, enabled = true }: CardBlockP
             <CardHeader className="px-4 py-3">
                 <div className="flex items-center gap-2 flex-wrap">
                     <CardTitle className="text-base whitespace-nowrap">{cardData.title}</CardTitle>
-                    {
-                        cardData.badge && (
-                            <Badge variant={cardData.badge.variant || 'default'} className="text-xs cursor-pointer">
-                                {cardData.badge.text}
-                            </Badge>
-                        )
-                    }
+                    {cardData.badge && (
+                        <Badge
+                            variant={cardData.badge.variant || "default"}
+                            className="text-xs cursor-pointer"
+                        >
+                            {cardData.badge.text}
+                        </Badge>
+                    )}
                 </div>
             </CardHeader>
 
             <CardContent className="space-y-3 px-4 pb-3 pt-0">
                 {/* tabs区域 */}
-                {
-                    cardData.tabs && cardData.tabs.length > 0 && (
-                        <Tabs defaultValue={cardData.tabs[0].value}>
-                            <TabsList key="__tabs-list" className="h-8 w-full">
-                                {cardData.tabs.filter(tab => tab.value).map((tab, index) => (
-                                    <TabsTrigger key={`${tab.value}+${index}`} value={tab.value} className="text-xs py-1">
-                                        {tab.label || ''}
+                {cardData.tabs && cardData.tabs.length > 0 && (
+                    <Tabs defaultValue={cardData.tabs[0].value}>
+                        <TabsList key="__tabs-list" className="h-8 w-full">
+                            {cardData.tabs
+                                .filter((tab) => tab.value)
+                                .map((tab, index) => (
+                                    <TabsTrigger
+                                        key={`${tab.value}+${index}`}
+                                        value={tab.value}
+                                        className="text-xs py-1"
+                                    >
+                                        {tab.label || ""}
                                     </TabsTrigger>
                                 ))}
-                            </TabsList>
-                            {
-                                cardData.tabs.filter(tab => tab.value).map((tab, index) => (
-                                    <TabsContent key={`${tab.value}+${index}`} value={tab.value} className="text-xs leading-relaxed text-foreground whitespace-pre-line">
-                                        {tab.content}
-                                    </TabsContent>
-                                ))
-                            }
-                        </Tabs>
-                    )
-                }
+                        </TabsList>
+                        {cardData.tabs
+                            .filter((tab) => tab.value)
+                            .map((tab, index) => (
+                                <TabsContent
+                                    key={`${tab.value}+${index}`}
+                                    value={tab.value}
+                                    className="text-xs leading-relaxed text-foreground whitespace-pre-line"
+                                >
+                                    {tab.content}
+                                </TabsContent>
+                            ))}
+                    </Tabs>
+                )}
                 {/* sections区域 */}
-                {
-                    cardData.sections && cardData.sections.length > 0 && (
-                        cardData.sections.map((section, index) => (
-                            <div key={`${section.title}+${index}`} className="space-y-1.5">
-                                {
-                                    section.title && (
-                                        <h4 className="font-bold text-sm text-foreground">
-                                            {section.title}
-                                        </h4>
-                                    )
-                                }
-                                {
-                                    section.content && (
-                                        <p className="text-xs leading-relaxed text-muted-foreground">
-                                            {section.content}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    section.items && (
-                                        <div className="rounded-md border bg-muted/20 p-3 text-xs">
-                                            {
-                                                section.items.map((item, index) => (
-                                                    <div key={`${item}+${index}`} className="relative pl-5 mb-2 last:mb-0">
-                                                        <div className="absolute left-0 top-0.5">
-                                                            {
-                                                                // TODO: 处理其他状态
-                                                                item.status === 'success' ? (
-                                                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                                                                ) : (
-                                                                    <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
-                                                                )
-                                                            }
-                                                        </div>
-                                                        <p className="text-muted-foreground">{item.label}</p>
-                                                        {
-                                                            item.detail && (
-                                                                <p className="text-muted-foreground mt-0.5">
-                                                                    {item.highlight && <span className="font-medium text-orange-500">{item.highlight}</span>}
-                                                                    {item.detail}
-                                                                </p>
-                                                            )
-                                                        }
-                                                    </div>
-                                                ))
-                                            }
+                {cardData.sections &&
+                    cardData.sections.length > 0 &&
+                    cardData.sections.map((section, index) => (
+                        <div key={`${section.title}+${index}`} className="space-y-1.5">
+                            {section.title && (
+                                <h4 className="font-bold text-sm text-foreground">
+                                    {section.title}
+                                </h4>
+                            )}
+                            {section.content && (
+                                <p className="text-xs leading-relaxed text-muted-foreground">
+                                    {section.content}
+                                </p>
+                            )}
+                            {section.items && (
+                                <div className="rounded-md border bg-muted/20 p-3 text-xs">
+                                    {section.items.map((item, index) => (
+                                        <div
+                                            key={`${item}+${index}`}
+                                            className="relative pl-5 mb-2 last:mb-0"
+                                        >
+                                            <div className="absolute left-0 top-0.5">
+                                                {
+                                                    // TODO: 处理其他状态
+                                                    item.status === "success" ? (
+                                                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                                    ) : (
+                                                        <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                                                    )
+                                                }
+                                            </div>
+                                            <p className="text-muted-foreground">{item.label}</p>
+                                            {item.detail && (
+                                                <p className="text-muted-foreground mt-0.5">
+                                                    {item.highlight && (
+                                                        <span className="font-medium text-orange-500">
+                                                            {item.highlight}
+                                                        </span>
+                                                    )}
+                                                    {item.detail}
+                                                </p>
+                                            )}
                                         </div>
-                                    )
-                                }
-
-                            </div>
-                        ))
-                    )
-                }
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
             </CardContent>
 
             {/* 底部按钮 - 仅在 enabled 为 true 时显示 */}
-            {
-                enabled && cardData.footer && cardData.footer.buttons && cardData.footer.buttons.length > 0 && (
+            {enabled &&
+                cardData.footer &&
+                cardData.footer.buttons &&
+                cardData.footer.buttons.length > 0 && (
                     <CardFooter className="px-4 py-3 gap-2">
-                        {
-                            cardData.footer.buttons.map((button, index) => (
-                                <Button
-                                    key={`${button.text}+${index}`}
-                                    variant={button.variant || 'default'}
-                                    size="sm"
-                                    className="flex-1 text-xs"
-                                    onClick={() => handleButtonClick(button)}
-                                >
-                                    {button.text}
-                                </Button>
-                            ))
-                        }
+                        {cardData.footer.buttons.map((button, index) => (
+                            <Button
+                                key={`${button.text}+${index}`}
+                                variant={button.variant || "default"}
+                                size="sm"
+                                className="flex-1 text-xs"
+                                onClick={() => handleButtonClick(button)}
+                            >
+                                {button.text}
+                            </Button>
+                        ))}
                     </CardFooter>
-                )
-            }
+                )}
         </Card>
     )
 }

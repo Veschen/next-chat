@@ -1,26 +1,26 @@
-'use client'
+"use client"
 
-import { Lightbulb, ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { SuggestionItem } from '@/lib/types'
+import { Lightbulb, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { SuggestionItem } from "@/lib/types"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 interface SuggestionsProps {
     items: SuggestionItem[]
     onSelect: (prompt: string) => void
     className?: string
-    mode?: 'default' | 'dropdown'
+    mode?: "default" | "dropdown"
 }
 
-export function Suggestions({ items, onSelect, className, mode = 'default' }: SuggestionsProps) {
+export function Suggestions({ items, onSelect, className, mode = "default" }: SuggestionsProps) {
     // Dropdown 模式：单个按钮展开菜单
-    if (mode === 'dropdown') {
+    if (mode === "dropdown") {
         return (
             <div className={cn("px-4 py-2", className)}>
                 <DropdownMenu>
@@ -59,7 +59,8 @@ export function Suggestions({ items, onSelect, className, mode = 'default' }: Su
                 <button
                     key={item.prompt}
                     onClick={() => onSelect(item.prompt)}
-                    className={cn("inline-flex items-center rounded-full border border-border ",
+                    className={cn(
+                        "inline-flex items-center rounded-full border border-border ",
                         "bg-background px-3 py-1.5 text-xs text-foreground shadow-sm transition-colors",
                         "hover:bg-accent hover:text-accent-foreground active:scale-95"
                     )}

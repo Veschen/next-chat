@@ -1,24 +1,30 @@
-'use client'
+"use client"
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
-import { PanelLeftClose, PanelLeft, ChevronDown } from 'lucide-react'
-import { Button } from '../ui/button'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { cn } from "@/lib/utils"
+import { PanelLeftClose, PanelLeft, ChevronDown } from "lucide-react"
+import { Button } from "../ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { useChatStore } from '@/lib/store'
-import { useHydration } from '@/lib/hooks/use-hydration'
-import { ConversationList } from './conversation-list'
-import { ChatInput } from './chat-input'
-import { MessageList } from './message-list'
-import type { CRequestOptions } from '@/lib/request'
-import type { FileItem } from '@/lib/store/types'
-import { REQUEST_OPTIONS, PROVIDER_OPTIONS, MOCK_SHORTCUTS, WELCOME_QUESTIONS, DEFAULT_SUGGESTIONS } from '@/lib/constants'
-import { OPERATION_NAMES } from '@/lib/store/operation-slice'
+    DropdownMenuTrigger
+} from "../ui/dropdown-menu"
+import { useChatStore } from "@/lib/store"
+import { useHydration } from "@/lib/hooks/use-hydration"
+import { ConversationList } from "./conversation-list"
+import { ChatInput } from "./chat-input"
+import { MessageList } from "./message-list"
+import type { CRequestOptions } from "@/lib/request"
+import type { FileItem } from "@/lib/store/types"
+import {
+    REQUEST_OPTIONS,
+    PROVIDER_OPTIONS,
+    MOCK_SHORTCUTS,
+    WELCOME_QUESTIONS,
+    DEFAULT_SUGGESTIONS
+} from "@/lib/constants"
+import { OPERATION_NAMES } from "@/lib/store/operation-slice"
 
 export function ChatLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -28,10 +34,13 @@ export function ChatLayout() {
     const provider = useChatStore((state) => state.provider)
     const setProvider = useChatStore((state) => state.setProvider)
 
-    const requestOptions: CRequestOptions = useMemo(() => ({
-        ...REQUEST_OPTIONS,
-        baseURL: `/api/chat?provider=${provider}`,
-    }), [provider])
+    const requestOptions: CRequestOptions = useMemo(
+        () => ({
+            ...REQUEST_OPTIONS,
+            baseURL: `/api/chat?provider=${provider}`
+        }),
+        [provider]
+    )
 
     const conversations = useChatStore((state) => state.conversations)
     const activeConversationId = useChatStore((state) => state.activeConversationId)
@@ -47,7 +56,7 @@ export function ChatLayout() {
     const regenerateLastMessage = useChatStore((state) => state.regenerateLastMessage)
     const switchMessageVersion = useChatStore((state) => state.switchMessageVersion)
     const editMessage = useChatStore((state) => state.editMessage)
-    
+
     // 文件上传相关
     const pendingFiles = useChatStore((state) => state.pendingFiles)
     const addFiles = useChatStore((state) => state.addFiles)
@@ -69,9 +78,9 @@ export function ChatLayout() {
         regenerateLastMessage,
         switchMessageVersion,
         editMessage,
-        requestOptions,
+        requestOptions
     })
-    
+
     // 每次渲染时更新 ref
     operationsRef.current = {
         sendMessage,
@@ -79,7 +88,7 @@ export function ChatLayout() {
         regenerateLastMessage,
         switchMessageVersion,
         editMessage,
-        requestOptions,
+        requestOptions
     }
 
     // 注册全局操作（只执行一次）
@@ -105,15 +114,15 @@ export function ChatLayout() {
         registerOperations({
             [OPERATION_NAMES.SEND_MESSAGE]: handleSend,
             [OPERATION_NAMES.REGENERATE]: handleGenerate,
-            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: 'like' | 'dislike' | null) => {
+            [OPERATION_NAMES.FEEDBACK]: (id: string, feedback: "like" | "dislike" | null) => {
                 operationsRef.current.setMessageFeedback(id, feedback)
             },
-            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: 'prev' | 'next') => {
+            [OPERATION_NAMES.SWITCH_VERSION]: (id: string, direction: "prev" | "next") => {
                 operationsRef.current.switchMessageVersion(id, direction)
             },
             [OPERATION_NAMES.QUESTION_SELECT]: handleSend,
             [OPERATION_NAMES.SUGGESTION_SELECT]: handleSend,
-            [OPERATION_NAMES.EDIT_MESSAGE]: handleEditMessage,
+            [OPERATION_NAMES.EDIT_MESSAGE]: handleEditMessage
         })
 
         return () => {
@@ -122,14 +131,17 @@ export function ChatLayout() {
     }, [registerOperations, clearOperations])
 
     // 水合完成前显示默认标题，避免 hydration mismatch
-    const title = isHydrated 
-        ? (currentConversation?.title ?? '新对话')
-        : '新对话'
+    const title = isHydrated ? (currentConversation?.title ?? "新对话") : "新对话"
 
     return (
         <div className="flex h-screen overflow-hidden">
             {/* 侧边栏 */}
-            <div className={cn('border-r transition-all duration-300 ease-in-out overflow-hidden', sidebarOpen ? 'w-64' : 'w-0')}>
+            <div
+                className={cn(
+                    "border-r transition-all duration-300 ease-in-out overflow-hidden",
+                    sidebarOpen ? "w-64" : "w-0"
+                )}
+            >
                 <div className="w-64 h-full">
                     <ConversationList
                         conversations={conversations}
@@ -145,26 +157,32 @@ export function ChatLayout() {
             <div className="flex-1 flex flex-col min-w-0 min-h-0">
                 {/* 顶栏 */}
                 <div className="flex items-center gap-2 border-b px-4 py-2 shrink-0">
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setSidebarOpen((prev) => !prev)}>
-                        {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-8 h-8"
+                        onClick={() => setSidebarOpen((prev) => !prev)}
+                    >
+                        {sidebarOpen ? (
+                            <PanelLeftClose className="w-4 h-4" />
+                        ) : (
+                            <PanelLeft className="w-4 h-4" />
+                        )}
                     </Button>
-                    <h1 className="text-sm font-medium truncate">
-                        {title}
-                    </h1>
+                    <h1 className="text-sm font-medium truncate">{title}</h1>
                     <div className="flex items-center gap-3">
-                        {
-                            isStreaming && <span className="text-xs text-muted-foreground animate-pulse">生成中...</span>
-                        }
+                        {isStreaming && (
+                            <span className="text-xs text-muted-foreground animate-pulse">
+                                生成中...
+                            </span>
+                        )}
                     </div>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-3 text-xs gap-1"
-                            >
-                                {PROVIDER_OPTIONS.find(p => p.value === provider)?.label || 'Mock'}
+                            <Button variant="ghost" size="sm" className="h-8 px-3 text-xs gap-1">
+                                {PROVIDER_OPTIONS.find((p) => p.value === provider)?.label ||
+                                    "Mock"}
                                 <ChevronDown className="w-3 h-3" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -192,7 +210,7 @@ export function ChatLayout() {
                 <ChatInput
                     onAbort={abortStream}
                     isStreaming={isStreaming}
-                    shortcuts={provider === 'mock' ? MOCK_SHORTCUTS : []}
+                    shortcuts={provider === "mock" ? MOCK_SHORTCUTS : []}
                     pendingFiles={pendingFiles}
                     onAddFiles={addFiles}
                     onRemoveFile={removeFile}

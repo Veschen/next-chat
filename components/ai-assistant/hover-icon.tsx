@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import React from 'react'
-import { Bot } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import React from "react"
+import { Bot } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface HoverIconProps {
     onClick?: () => void
@@ -20,9 +20,9 @@ export function HoverIcon({ onClick, disabled = false, className }: HoverIconPro
         <Button
             size="icon"
             className={cn(
-                'h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300',
-                'bg-primary hover:bg-primary/90',
-                disabled && 'opacity-50 cursor-not-allowed',
+                "h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300",
+                "bg-primary hover:bg-primary/90",
+                disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
             onClick={onClick}

@@ -1,9 +1,7 @@
-'use client'
+"use client"
 
-import { ChatLayout } from '@/components/chat/chat-layout'
+import { ChatLayout } from "@/components/chat/chat-layout"
 
 export default function Home() {
-  return (
-    <ChatLayout />
-  )
+    return <ChatLayout />
 }

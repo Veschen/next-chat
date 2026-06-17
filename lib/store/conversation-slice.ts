@@ -8,7 +8,7 @@ import type { Conversation, ConversationSlice, ChatStore } from "./types"
 
 export const createConversationSlice: StateCreator<
     ChatStore,
-    [['zustand/immer', never], ['zustand/devtools', never]],
+    [["zustand/immer", never], ["zustand/devtools", never]],
     [],
     ConversationSlice
 > = (set, get) => ({
@@ -16,46 +16,62 @@ export const createConversationSlice: StateCreator<
     activeConversationId: null,
     getActiveConversation: () => {
         const { conversations, activeConversationId } = get()
-        return conversations.find(c => c.id === activeConversationId)
+        return conversations.find((c) => c.id === activeConversationId)
     },
 
     createConversation: () => {
         const newConversation: Conversation = {
             id: generateId(),
-            title: '新会话',
+            title: "新会话",
             messages: [],
-            createdAt: Date.now(),
+            createdAt: Date.now()
         }
-        set((state) => {
-            state.conversations.push(newConversation)
-            state.activeConversationId = newConversation.id
-        }, false, 'conversation/create')
+        set(
+            (state) => {
+                state.conversations.push(newConversation)
+                state.activeConversationId = newConversation.id
+            },
+            false,
+            "conversation/create"
+        )
         return newConversation.id
     },
 
     setActiveConversation: (id: string) => {
-        set((state)=>{ 
-            state.activeConversationId = id 
-        }, false, 'conversation/setActive')
+        set(
+            (state) => {
+                state.activeConversationId = id
+            },
+            false,
+            "conversation/setActive"
+        )
     },
 
     deleteConversation: (id: string) => {
-        set((state) => {
-            const index = state.conversations.findIndex(c => c.id === id)
-            if (index === -1) return
-            state.conversations.splice(index, 1)
-            if (state.activeConversationId === id) {
-                state.activeConversationId = state.conversations.at(-1)?.id ?? null
-            }
-        }, false, 'conversation/delete')
+        set(
+            (state) => {
+                const index = state.conversations.findIndex((c) => c.id === id)
+                if (index === -1) return
+                state.conversations.splice(index, 1)
+                if (state.activeConversationId === id) {
+                    state.activeConversationId = state.conversations.at(-1)?.id ?? null
+                }
+            },
+            false,
+            "conversation/delete"
+        )
     },
     renameConversation: (id: string, title: string) => {
         const trimmed = title.trim()
         if (!trimmed) return
-        set((state) => {
-            const index = state.conversations.findIndex(c => c.id === id)
-            if (index === -1) return
-            state.conversations[index].title = trimmed
-        }, false, 'conversation/rename')
-    },
+        set(
+            (state) => {
+                const index = state.conversations.findIndex((c) => c.id === id)
+                if (index === -1) return
+                state.conversations[index].title = trimmed
+            },
+            false,
+            "conversation/rename"
+        )
+    }
 })

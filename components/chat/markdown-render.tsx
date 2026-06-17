@@ -1,19 +1,19 @@
-'use client'
+"use client"
 
 import React, { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import {
     useMarkdownPlugins,
     type CustomCodeBlockRenderer,
-    type MarkdownPluginConfig,
+    type MarkdownPluginConfig
 } from "./markdown-extensions"
 import { useStreamContent } from "@/lib/hooks/use-stream-content"
 import { parseMarkdownIntoBlocks } from "@/lib/markdown/parse-blocks"
 import { remend } from "@/lib/markdown/remend"
 import { MemoizedBlock } from "./memoized-block"
 import { ComponentErrorBoundary } from "./component-error-boundary"
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/monokai.min.css'
+import "katex/dist/katex.min.css"
+import "highlight.js/styles/monokai.min.css"
 
 interface MarkdownRenderProps {
     content: string
@@ -34,12 +34,13 @@ export function MarkdownRender({
     isMessageEnd = true,
     onTypingComplete,
     onSendMessage,
-    enabled = true,
+    enabled = true
 }: MarkdownRenderProps) {
     const contextPlugins = useMarkdownPlugins()
-    const config = useMemo(() =>
-        ({ ...contextPlugins, ...propsPlugins }),
-        [contextPlugins, propsPlugins])
+    const config = useMemo(
+        () => ({ ...contextPlugins, ...propsPlugins }),
+        [contextPlugins, propsPlugins]
+    )
 
     const enableMermaid = config.mermaid !== false
     const enableMath = config.math !== false
@@ -48,7 +49,7 @@ export function MarkdownRender({
     const { displayContent } = useStreamContent({
         content,
         isMessageEnd: streaming ? isMessageEnd : true,
-        onTypingComplete,
+        onTypingComplete
     })
 
     const renderContent = streaming ? displayContent : content
@@ -56,7 +57,7 @@ export function MarkdownRender({
     const blocks = useMemo(() => parseMarkdownIntoBlocks(healedContent), [healedContent])
 
     return (
-        <div className={cn('prose prose-sm max-w-none dark:prose-invert', className)}>
+        <div className={cn("prose prose-sm max-w-none dark:prose-invert", className)}>
             {blocks.map((block) => (
                 <ComponentErrorBoundary key={block.key}>
                     <MemoizedBlock

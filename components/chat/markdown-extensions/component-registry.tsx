@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import React, { createContext, useContext, useMemo } from 'react'
+import React, { createContext, useContext, useMemo } from "react"
 
 /**
  * 自定义代码块渲染器接口
@@ -46,7 +46,7 @@ export function MarkdownPluginProvider({
     config,
     children
 }: {
-    config: MarkdownPluginConfig,
+    config: MarkdownPluginConfig
     children: React.ReactNode
 }) {
     const mergedConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config])
@@ -61,7 +61,7 @@ export function useMarkdownPlugins(): MarkdownPluginConfig {
     return useContext(MarkdownPluginContext)
 }
 
-/** 
+/**
  * 根据语言标识查找匹配的自定义渲染器
  */
 export function findCustomRenderer(

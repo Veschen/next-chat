@@ -13,7 +13,7 @@ import { createFileSlice } from "./file-slice"
 import { createOperationSlice } from "./operation-slice"
 
 // 持久化存储的键名
-const STORAGE_KEY = 'next-chat-storage'
+const STORAGE_KEY = "next-chat-storage"
 
 export const useChatStore = create<ChatStore>()(
     devtools(
@@ -25,13 +25,13 @@ export const useChatStore = create<ChatStore>()(
                 ...createFileSlice(...args),
                 ...createOperationSlice(...args),
                 // Provider 状态
-                provider: 'mock',
+                provider: "mock",
                 setProvider: (provider: string) => {
                     const [set] = args
                     set((state) => {
                         state.provider = provider
                     })
-                },
+                }
             })),
             {
                 name: STORAGE_KEY,
@@ -39,12 +39,12 @@ export const useChatStore = create<ChatStore>()(
                 partialize: (state) => ({
                     conversations: state.conversations,
                     activeConversationId: state.activeConversationId,
-                    provider: state.provider,
-                }),
+                    provider: state.provider
+                })
             }
         ),
         {
-            name: 'chat-store',
+            name: "chat-store"
         }
-    ),
+    )
 )

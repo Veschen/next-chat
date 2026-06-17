@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import React, { useCallback, useRef, useState } from 'react'
-import { Upload, X, FileText, FileImage, FileAudio, FileVideo, File } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '../ui/button'
-import { Progress } from '../ui/progress'
-import type { FileItem, UploadingFile } from '@/lib/store/types'
+import React, { useCallback, useRef, useState } from "react"
+import { Upload, X, FileText, FileImage, FileAudio, FileVideo, File } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "../ui/button"
+import { Progress } from "../ui/progress"
+import type { FileItem, UploadingFile } from "@/lib/store/types"
 
 interface FileCardProps {
     file: UploadingFile
@@ -17,23 +17,23 @@ function FileCard({ file, onRemove }: FileCardProps) {
     const [showRemove, setShowRemove] = useState(false)
 
     const getFileIcon = () => {
-        const iconClass = 'w-5 h-5'
+        const iconClass = "w-5 h-5"
         if (!file.mimeType) return <File className={iconClass} />
-        
-        if (file.mimeType.startsWith('image/')) {
+
+        if (file.mimeType.startsWith("image/")) {
             return <FileImage className={iconClass} />
         }
-        if (file.mimeType.startsWith('audio/')) {
+        if (file.mimeType.startsWith("audio/")) {
             return <FileAudio className={iconClass} />
         }
-        if (file.mimeType.startsWith('video/')) {
+        if (file.mimeType.startsWith("video/")) {
             return <FileVideo className={iconClass} />
         }
         return <FileText className={iconClass} />
     }
 
     const formatFileSize = (size?: number) => {
-        if (!size) return '-'
+        if (!size) return "-"
         if (size < 1024) return `${size} B`
         if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
         return `${(size / (1024 * 1024)).toFixed(1)} MB`
@@ -42,8 +42,8 @@ function FileCard({ file, onRemove }: FileCardProps) {
     return (
         <div
             className={cn(
-                'relative flex items-center gap-3 rounded-lg border p-2.5 bg-background',
-                'hover:bg-muted/50 transition-colors'
+                "relative flex items-center gap-3 rounded-lg border p-2.5 bg-background",
+                "hover:bg-muted/50 transition-colors"
             )}
             onMouseEnter={() => setShowRemove(true)}
             onMouseLeave={() => setShowRemove(false)}
@@ -53,9 +53,9 @@ function FileCard({ file, onRemove }: FileCardProps) {
                 variant="ghost"
                 size="icon"
                 className={cn(
-                    'absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground',
-                    'transition-opacity',
-                    showRemove ? 'opacity-100' : 'opacity-0'
+                    "absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground",
+                    "transition-opacity",
+                    showRemove ? "opacity-100" : "opacity-0"
                 )}
                 onClick={() => onRemove(file.uid)}
             >
@@ -65,7 +65,11 @@ function FileCard({ file, onRemove }: FileCardProps) {
             {/* 文件预览或图标 */}
             <div className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0 bg-muted">
                 {file.previewUrl ? (
-                    <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
+                    <img
+                        src={file.previewUrl}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                    />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         {getFileIcon()}
@@ -80,22 +84,27 @@ function FileCard({ file, onRemove }: FileCardProps) {
             </div>
 
             {/* 进度条 */}
-            {file.status === 'uploading' && (
+            {file.status === "uploading" && (
                 <div className="w-20">
                     <Progress value={file.progress || 0} className="h-1" />
                 </div>
             )}
 
             {/* 状态图标 */}
-            {file.status === 'done' && (
+            {file.status === "done" && (
                 <div className="text-green-500">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                        />
                     </svg>
                 </div>
             )}
-            {file.status === 'failed' && (
-                <div className="text-red-500 text-xs">{file.errorMessage || '上传失败'}</div>
+            {file.status === "failed" && (
+                <div className="text-red-500 text-xs">{file.errorMessage || "上传失败"}</div>
             )}
         </div>
     )
@@ -117,7 +126,7 @@ export function Attachments({
     onRemoveFile,
     accept,
     maxCount = 10,
-    disabled = false,
+    disabled = false
 }: AttachmentsProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -132,57 +141,68 @@ export function Attachments({
         setIsDragging(false)
     }, [])
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
+    const handleDrop = useCallback(
+        (e: React.DragEvent) => {
+            e.preventDefault()
+            setIsDragging(false)
 
-        if (disabled) return
-        if (files.length >= maxCount) return
+            if (disabled) return
+            if (files.length >= maxCount) return
 
-        const droppedFiles = Array.from(e.dataTransfer.files).filter(file => {
-            if (!accept) return true
-            return file.type.match(new RegExp(accept.replace(/,/g, '|').replace(/\*/g, '.*')))
-        })
+            const droppedFiles = Array.from(e.dataTransfer.files).filter((file) => {
+                if (!accept) return true
+                return file.type.match(new RegExp(accept.replace(/,/g, "|").replace(/\*/g, ".*")))
+            })
 
-        if (droppedFiles.length > 0) {
-            onAddFiles(droppedFiles)
-        }
-    }, [accept, disabled, files.length, maxCount, onAddFiles])
+            if (droppedFiles.length > 0) {
+                onAddFiles(droppedFiles)
+            }
+        },
+        [accept, disabled, files.length, maxCount, onAddFiles]
+    )
 
     const handleClick = useCallback(() => {
         if (disabled || files.length >= maxCount) return
         fileInputRef.current?.click()
     }, [disabled, files.length, maxCount])
 
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = Array.from(e.target.files || [])
-        if (selectedFiles.length > 0) {
-            onAddFiles(selectedFiles)
-        }
-        e.target.value = '' // 重置input以便重复选择相同文件
-    }, [onAddFiles])
+    const handleFileChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const selectedFiles = Array.from(e.target.files || [])
+            if (selectedFiles.length > 0) {
+                onAddFiles(selectedFiles)
+            }
+            e.target.value = "" // 重置input以便重复选择相同文件
+        },
+        [onAddFiles]
+    )
 
     // 无文件时显示拖拽区域
     if (files.length === 0) {
         return (
             <div
                 className={cn(
-                    'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all',
-                    'hover:border-primary hover:bg-primary/5',
-                    isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/30',
-                    disabled ? 'opacity-50 cursor-not-allowed' : ''
+                    "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all",
+                    "hover:border-primary hover:bg-primary/5",
+                    isDragging ? "border-primary bg-primary/10" : "border-muted-foreground/30",
+                    disabled ? "opacity-50 cursor-not-allowed" : ""
                 )}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={handleClick}
             >
-                <Upload className={cn('w-10 h-10 mx-auto mb-3', isDragging ? 'text-primary' : 'text-muted-foreground')} />
+                <Upload
+                    className={cn(
+                        "w-10 h-10 mx-auto mb-3",
+                        isDragging ? "text-primary" : "text-muted-foreground"
+                    )}
+                />
                 <p className="text-sm font-medium text-foreground mb-1">
-                    {isDragging ? '松开以上传文件' : '拖拽文件到此处上传'}
+                    {isDragging ? "松开以上传文件" : "拖拽文件到此处上传"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                    或点击选择文件，支持 {accept || '所有文件类型'}
+                    或点击选择文件，支持 {accept || "所有文件类型"}
                 </p>
                 <input
                     ref={fileInputRef}
@@ -202,7 +222,7 @@ export function Attachments({
         <div className="space-y-3">
             {/* 文件列表 */}
             <div className="space-y-2">
-                {files.map(file => (
+                {files.map((file) => (
                     <FileCard key={file.uid} file={file} onRemove={onRemoveFile} />
                 ))}
             </div>
@@ -211,8 +231,8 @@ export function Attachments({
             {files.length < maxCount && !disabled && (
                 <div
                     className={cn(
-                        'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all',
-                        'hover:border-primary hover:bg-primary/5 border-muted-foreground/30'
+                        "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all",
+                        "hover:border-primary hover:bg-primary/5 border-muted-foreground/30"
                     )}
                     onClick={handleClick}
                 >
@@ -233,34 +253,40 @@ export function Attachments({
 }
 
 /** 消息列表中的文件附件组件 */
-export function FileAttachments({ files, isUser = false }: { files: FileItem[], isUser?: boolean }) {
+export function FileAttachments({
+    files,
+    isUser = false
+}: {
+    files: FileItem[]
+    isUser?: boolean
+}) {
     if (!files || files.length === 0) return null
 
     const getFileIcon = (mimeType?: string) => {
-        const iconClass = 'w-5 h-5'
+        const iconClass = "w-5 h-5"
         if (!mimeType) return <File className={iconClass} />
-        if (mimeType.startsWith('image/')) return <FileImage className={iconClass} />
-        if (mimeType.startsWith('audio/')) return <FileAudio className={iconClass} />
-        if (mimeType.startsWith('video/')) return <FileVideo className={iconClass} />
+        if (mimeType.startsWith("image/")) return <FileImage className={iconClass} />
+        if (mimeType.startsWith("audio/")) return <FileAudio className={iconClass} />
+        if (mimeType.startsWith("video/")) return <FileVideo className={iconClass} />
 
         return <FileText className={iconClass} />
     }
 
     const formatFileSize = (size?: number) => {
-        if (!size) return '-'
+        if (!size) return "-"
         if (size < 1024) return `${size} B`
         if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`
         return `${(size / (1024 * 1024)).toFixed(2)} MB`
     }
 
     const getFileExtension = (name: string) => {
-        const extensionIndex = name.lastIndexOf('.')
-        if (extensionIndex === -1) return ''
+        const extensionIndex = name.lastIndexOf(".")
+        if (extensionIndex === -1) return ""
         return name.slice(extensionIndex + 1).toLowerCase()
     }
 
     const isImageFile = (mimeType?: string) => {
-        return mimeType?.startsWith('image/')
+        return mimeType?.startsWith("image/")
     }
 
     // 预览图片状态
@@ -269,12 +295,14 @@ export function FileAttachments({ files, isUser = false }: { files: FileItem[], 
     return (
         <>
             <div className="space-y-2">
-                {files.map(file => (
+                {files.map((file) => (
                     <div
                         key={file.uid}
                         className={cn(
-                            'group flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer',
-                            isUser ? 'bg-background hover:bg-muted/50' : 'bg-muted hover:bg-muted/80'
+                            "group flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer",
+                            isUser
+                                ? "bg-background hover:bg-muted/50"
+                                : "bg-muted hover:bg-muted/80"
                         )}
                         onClick={() => {
                             if (isImageFile(file.mimeType) && file.url) {
@@ -292,8 +320,18 @@ export function FileAttachments({ files, isUser = false }: { files: FileItem[], 
                                 />
                                 {/* 点击提示图标 */}
                                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                    <svg
+                                        className="w-6 h-6 text-white"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                                        />
                                     </svg>
                                 </div>
                             </div>
@@ -301,17 +339,21 @@ export function FileAttachments({ files, isUser = false }: { files: FileItem[], 
                             // 非图片类型：使用截图排版结构
                             <>
                                 {/* 文件图标 */}
-                                <div className={cn(
-                                    'flex-shrink-0 rounded-xl flex items-center justify-center w-20 h-20',
-                                    'bg-muted'
-                                )}>
+                                <div
+                                    className={cn(
+                                        "flex-shrink-0 rounded-xl flex items-center justify-center w-20 h-20",
+                                        "bg-muted"
+                                    )}
+                                >
                                     <span className="text-muted-foreground flex items-center justify-center">
                                         {getFileIcon(file.mimeType)}
                                     </span>
                                 </div>
                                 {/* 文件信息 */}
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm leading-tight truncate">{file.name}</p>
+                                    <p className="font-medium text-sm leading-tight truncate">
+                                        {file.name}
+                                    </p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
                                         {getFileExtension(file.name)} {formatFileSize(file.size)}
                                     </p>
@@ -332,8 +374,18 @@ export function FileAttachments({ files, isUser = false }: { files: FileItem[], 
                         className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
                         onClick={() => setPreviewImage(null)}
                     >
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                            className="w-8 h-8"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                     <img

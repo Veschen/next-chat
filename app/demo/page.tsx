@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { TrendingUp, Users, DollarSign, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { HoverIcon } from '@/components/ai-assistant/hover-icon'
-import { Entrance } from '@/components/ai-assistant/entrance'
-import { WELCOME_QUESTIONS } from '@/lib/constants'
+import { useState } from "react"
+import { TrendingUp, Users, DollarSign, Activity, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { HoverIcon } from "@/components/ai-assistant/hover-icon"
+import { Entrance } from "@/components/ai-assistant/entrance"
+import { WELCOME_QUESTIONS } from "@/lib/constants"
 
 // Mock 数据
 const mockData = {
@@ -16,38 +16,38 @@ const mockData = {
     sales: 12234,
     salesChange: 19,
     activeNow: 573,
-    activeNowChange: 201,
+    activeNowChange: 201
 }
 
 const statsCards = [
     {
-        title: '总收入',
+        title: "总收入",
         value: `$${mockData.totalRevenue.toLocaleString()}`,
-        description: '较上月',
+        description: "较上月",
         change: mockData.revenueChange,
-        icon: DollarSign,
+        icon: DollarSign
     },
     {
-        title: '订阅用户',
+        title: "订阅用户",
         value: `+${mockData.subscribers}`,
-        description: '较上月',
+        description: "较上月",
         change: mockData.subscribersChange,
-        icon: Users,
+        icon: Users
     },
     {
-        title: '销售额',
+        title: "销售额",
         value: `+${mockData.sales}`,
-        description: '较上月',
+        description: "较上月",
         change: mockData.salesChange,
-        icon: TrendingUp,
+        icon: TrendingUp
     },
     {
-        title: '活跃用户',
+        title: "活跃用户",
         value: `+${mockData.activeNow}`,
-        description: '实时监控',
+        description: "实时监控",
         change: mockData.activeNowChange,
-        icon: Activity,
-    },
+        icon: Activity
+    }
 ]
 
 /**
@@ -67,7 +67,7 @@ export default function DemoPage() {
 
     const handleNewChat = () => {
         // 新建对话时的额外处理（可选）
-        console.log('新建对话')
+        console.log("新建对话")
     }
 
     return (
@@ -89,7 +89,7 @@ export default function DemoPage() {
                     {statsCards.map((stat, index) => {
                         const Icon = stat.icon
                         const isPositive = stat.change > 0
-                        
+
                         return (
                             <Card key={index}>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -106,7 +106,11 @@ export default function DemoPage() {
                                         ) : (
                                             <ArrowDownRight className="h-3 w-3 text-red-500" />
                                         )}
-                                        <span className={isPositive ? 'text-green-500' : 'text-red-500'}>
+                                        <span
+                                            className={
+                                                isPositive ? "text-green-500" : "text-red-500"
+                                            }
+                                        >
                                             +{stat.change}%
                                         </span>
                                         <span>{stat.description}</span>
@@ -126,11 +130,13 @@ export default function DemoPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-lg">
-                                <p className="text-muted-foreground">图表区域（可集成 ECharts/Recharts）</p>
+                                <p className="text-muted-foreground">
+                                    图表区域（可集成 ECharts/Recharts）
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
-                    
+
                     <Card className="col-span-3">
                         <CardHeader>
                             <CardTitle>实时销售</CardTitle>
@@ -139,13 +145,22 @@ export default function DemoPage() {
                         <CardContent>
                             <div className="space-y-4">
                                 {[1, 2, 3, 4, 5].map((item) => (
-                                    <div key={item} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                                    <div
+                                        key={item}
+                                        className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                                    >
                                         <div>
-                                            <p className="text-sm font-medium">订单 #{1000 + item}</p>
-                                            <p className="text-xs text-muted-foreground">客户 {item} 号</p>
+                                            <p className="text-sm font-medium">
+                                                订单 #{1000 + item}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                客户 {item} 号
+                                            </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-medium">${(100 + item * 50).toFixed(2)}</p>
+                                            <p className="text-sm font-medium">
+                                                ${(100 + item * 50).toFixed(2)}
+                                            </p>
                                             <p className="text-xs text-green-500">已完成</p>
                                         </div>
                                     </div>
@@ -165,18 +180,15 @@ export default function DemoPage() {
                     onNewChat={handleNewChat}
                     agentPresets={[
                         {
-                            name: '数据分析助手',
-                            description: '专注于数据分析、可视化、业务洞察',
-                            faq: WELCOME_QUESTIONS,
-                        },
+                            name: "数据分析助手",
+                            description: "专注于数据分析、可视化、业务洞察",
+                            faq: WELCOME_QUESTIONS
+                        }
                     ]}
                 />
-                
+
                 {/* 悬浮图标 */}
-                <HoverIcon
-                    onClick={handleIconClick}
-                    disabled={false}
-                />
+                <HoverIcon onClick={handleIconClick} disabled={false} />
             </div>
         </div>
     )

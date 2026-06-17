@@ -21,7 +21,7 @@ export interface QuestionItem {
     prompt: string
 }
 
-export const WELCOME_QUESTIONS = ['你好，我是你的智能助手，我可以帮助你解决各种问题。']
+export const WELCOME_QUESTIONS = ["你好，我是你的智能助手，我可以帮助你解决各种问题。"]
 
 /** 建议项 */
 export interface SuggestionItem {

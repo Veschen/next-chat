@@ -1,22 +1,22 @@
-'use client'
+"use client"
 
-import React, { memo } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeKatex from 'rehype-katex'
-import { Copy, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { memo } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import rehypeHighlight from "rehype-highlight"
+import rehypeKatex from "rehype-katex"
+import { Copy, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
     MermaidDiagram,
     CardBlock,
     EChartBlock,
     HTMLBlock,
-    type CustomCodeBlockRenderer,
-} from './markdown-extensions'
-import type { MarkdownBlock } from '@/lib/markdown/parse-blocks'
-import { ComponentErrorBoundary } from './component-error-boundary'
+    type CustomCodeBlockRenderer
+} from "./markdown-extensions"
+import type { MarkdownBlock } from "@/lib/markdown/parse-blocks"
+import { ComponentErrorBoundary } from "./component-error-boundary"
 
 interface MemoizedBlockProps {
     block: MarkdownBlock
@@ -27,18 +27,18 @@ interface MemoizedBlockProps {
     enabled?: boolean
 }
 
-const RAW_TEXT_LANGUAGE = new Set(['mermaid', 'card', 'echart', 'html'])
+const RAW_TEXT_LANGUAGE = new Set(["mermaid", "card", "echart", "html"])
 
 function extractText(node: React.ReactNode): string {
-    if (!node) return ''
-    if (typeof node === 'string') return node
-    if (typeof node === 'number') return String(node)
-    if (Array.isArray(node)) return node.map(extractText).join('')
-    if (typeof node === 'object' && node !== null && 'props' in node) {
+    if (!node) return ""
+    if (typeof node === "string") return node
+    if (typeof node === "number") return String(node)
+    if (Array.isArray(node)) return node.map(extractText).join("")
+    if (typeof node === "object" && node !== null && "props" in node) {
         const props = (node as unknown as Record<string, Record<string, unknown>>).props
         return extractText(props.children as React.ReactNode)
     }
-    return ''
+    return ""
 }
 
 function BlockCodeBlock({
@@ -58,16 +58,16 @@ function BlockCodeBlock({
 }) {
     const [copied, setCopied] = React.useState(false)
     const codeRef = React.useRef<HTMLElement>(null)
-    const match = /language-(\w+)/.exec(className || '')
-    const language = match?.[1] || 'plaintext'
+    const match = /language-(\w+)/.exec(className || "")
+    const language = match?.[1] || "plaintext"
 
-    const reactText = React.useMemo(() => extractText(children).replace(/\n$/, ''), [children])
-    const [domText, setDomText] = React.useState('')
+    const reactText = React.useMemo(() => extractText(children).replace(/\n$/, ""), [children])
+    const [domText, setDomText] = React.useState("")
     const needsDomText = RAW_TEXT_LANGUAGE.has(language)
 
     React.useEffect(() => {
         if (needsDomText && codeRef.current) {
-            const text = (codeRef.current.textContent || '').replace(/\n$/, '')
+            const text = (codeRef.current.textContent || "").replace(/\n$/, "")
             setDomText(text)
         }
     }, [needsDomText, children])
@@ -88,10 +88,10 @@ function BlockCodeBlock({
         )
     }
 
-    if (enableMermaid && language === 'mermaid') {
+    if (enableMermaid && language === "mermaid") {
         return (
             <ComponentErrorBoundary>
-                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                <code ref={codeRef} className={className} style={{ display: "none" }} {...props}>
                     {children}
                 </code>
                 <MermaidDiagram content={codeText} />
@@ -99,10 +99,10 @@ function BlockCodeBlock({
         )
     }
 
-    if (language === 'echart') {
+    if (language === "echart") {
         return (
             <ComponentErrorBoundary>
-                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                <code ref={codeRef} className={className} style={{ display: "none" }} {...props}>
                     {children}
                 </code>
                 <EChartBlock content={codeText} />
@@ -110,10 +110,10 @@ function BlockCodeBlock({
         )
     }
 
-    if (language === 'html') {
+    if (language === "html") {
         return (
             <ComponentErrorBoundary>
-                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                <code ref={codeRef} className={className} style={{ display: "none" }} {...props}>
                     {children}
                 </code>
                 <HTMLBlock content={codeText} />
@@ -121,10 +121,10 @@ function BlockCodeBlock({
         )
     }
 
-    if (language === 'card') {
+    if (language === "card") {
         return (
             <ComponentErrorBoundary>
-                <code ref={codeRef} className={className} style={{ display: 'none' }} {...props}>
+                <code ref={codeRef} className={className} style={{ display: "none" }} {...props}>
                     {children}
                 </code>
                 <CardBlock content={codeText} onSendMessage={onSendMessage} enabled={enabled} />
@@ -132,7 +132,7 @@ function BlockCodeBlock({
         )
     }
 
-    const customRenderer = customRenderers?.find(r => r.language === language)
+    const customRenderer = customRenderers?.find((r) => r.language === language)
     if (customRenderer) {
         const CustomComponent = customRenderer.component
         return (
@@ -151,7 +151,7 @@ function BlockCodeBlock({
                     className="flex items-center gap-1 hover:text-zinc-200 transition-colors"
                 >
                     {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    {copied ? '已复制' : '复制'}
+                    {copied ? "已复制" : "复制"}
                 </button>
             </div>
             <pre className="!mt-0 !rounded-t-none bg-zinc-800 overflow-x-auto whitespace-pre-wrap break-all">
@@ -169,10 +169,12 @@ function BlockContent({
     enableMath = true,
     customRenderers = [],
     onSendMessage,
-    enabled = true,
+    enabled = true
 }: MemoizedBlockProps) {
     const codeComponent = React.useMemo(() => {
-        return function CodeWrapper(props: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) {
+        return function CodeWrapper(
+            props: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }
+        ) {
             return (
                 <BlockCodeBlock
                     {...props}
@@ -198,15 +200,24 @@ function BlockContent({
     }, [enableMath])
 
     return (
-        <div key={block.key} className={cn('prose prose-sm max-w-none dark:prose-invert', { 'opacity-70': block.isIncomplete })}>
+        <div
+            key={block.key}
+            className={cn("prose prose-sm max-w-none dark:prose-invert", {
+                "opacity-70": block.isIncomplete
+            })}
+        >
             <ReactMarkdown
                 remarkPlugins={remarkPlugins}
                 rehypePlugins={rehypePlugins}
                 components={{
                     code: codeComponent,
                     p: ({ children }) => <p className="mb-3 last:mb-0 leading-7">{children}</p>,
-                    ul: ({ children }) => <ul className="mb-3 list-disc pl-6 space-y-1">{children}</ul>,
-                    ol: ({ children }) => <ol className="mb-3 list-decimal pl-6 space-y-1">{children}</ol>,
+                    ul: ({ children }) => (
+                        <ul className="mb-3 list-disc pl-6 space-y-1">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                        <ol className="mb-3 list-decimal pl-6 space-y-1">{children}</ol>
+                    ),
                     strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                     a: ({ children, href }) => (
                         <a
@@ -225,8 +236,14 @@ function BlockContent({
                             </table>
                         </div>
                     ),
-                    th: ({ children }) => <th className="border border-border bg-muted px-3 py-2 text-left font-semibold">{children}</th>,
-                    td: ({ children }) => <td className="border border-border px-3 py-2">{children}</td>,
+                    th: ({ children }) => (
+                        <th className="border border-border bg-muted px-3 py-2 text-left font-semibold">
+                            {children}
+                        </th>
+                    ),
+                    td: ({ children }) => (
+                        <td className="border border-border px-3 py-2">{children}</td>
+                    )
                 }}
             >
                 {block.content}

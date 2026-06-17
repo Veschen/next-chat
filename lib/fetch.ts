@@ -17,7 +17,7 @@ export interface FetchOptions extends RequestInit {
      *  单位：毫秒
      */
     retryInterval?: number
-    /** 
+    /**
      * 重试策略，业务可定制
      */
     shouldRetry?: (error: Error, retryCount: number) => boolean
@@ -35,28 +35,34 @@ export async function CFetch(url: string, options: FetchOptions): Promise<Respon
     for (let retryCount = 0; retryCount <= maxRetries; retryCount++) {
         // 非首次请求，等待重试间隔
         if (retryCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, retryInterval))
+            await new Promise((resolve) => setTimeout(resolve, retryInterval))
         }
         // 发请求
         try {
             const response = await fetchFn(url, restOptions)
             if (!response.ok) {
-                const error = new Error(`请求失败 ${response.status} ${response.statusText}`) as Error & { status: number }
+                const error = new Error(
+                    `请求失败 ${response.status} ${response.statusText}`
+                ) as Error & { status: number }
                 error.status = response.status
-                if (response.status >= 500 && retryCount < maxRetries && shouldRetry(error, retryCount)) {
+                if (
+                    response.status >= 500 &&
+                    retryCount < maxRetries &&
+                    shouldRetry(error, retryCount)
+                ) {
                     lastError = error
                     continue
                 }
                 throw error
             }
             if (!response.body) {
-                throw new Error('响应体为空')
+                throw new Error("响应体为空")
             }
             return response
         } catch (error) {
-            const err = error instanceof Error ? error : new Error('请求失败')
+            const err = error instanceof Error ? error : new Error("请求失败")
             // 如果是用户主动取消，则不重试
-            if (err.name === 'AbortError') {
+            if (err.name === "AbortError") {
                 throw err
             }
             // 判断是否能重试
@@ -66,9 +72,8 @@ export async function CFetch(url: string, options: FetchOptions): Promise<Respon
             }
             throw err
         }
-
     }
-    throw lastError || new Error('请求失败')
+    throw lastError || new Error("请求失败")
 }
 
 /**
@@ -76,10 +81,10 @@ export async function CFetch(url: string, options: FetchOptions): Promise<Respon
  */
 function defaultShouldRetry(error: Error): boolean {
     const status = (error as { status?: number }).status
-    if (typeof status === 'number' && status >= 500) {
+    if (typeof status === "number" && status >= 500) {
         return true
     }
-    if (error.name === 'TimeoutError') {
+    if (error.name === "TimeoutError") {
         return true
     }
     return false
